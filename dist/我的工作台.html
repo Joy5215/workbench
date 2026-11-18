@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f2ec">
+<link rel="icon" href="data:,">
+<title>我的工作台</title>
+<style>
+/* 样式层。构建时原样内联进 <style>，运行时不发额外请求。 */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#f7f6f1;color:#2b2d29;
+ font:14px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+ -webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit;color:inherit;border:0;outline:0;background:none}
+
+/* ---------- 外壳 ---------- */
+.app{height:100dvh;display:grid;grid-template-columns:208px 1fr;overflow:hidden}
+.app.mini{grid-template-columns:64px 1fr}
+
+/* ---------- 侧边栏 ---------- */
+.side{background:#f4f2ec;border-right:1px solid #e2dfd5;padding:15px 10px 10px;
+ display:flex;flex-direction:column;gap:1px;overflow:hidden;transition:padding .18s}
+.side>.grow{flex:1}
+.brand{display:flex;align-items:center;gap:9px;padding:3px 8px 15px;white-space:nowrap}
+.avatar{width:25px;height:25px;border-radius:6px;background:#3b3d38;flex:none;position:relative}
+.avatar::after{content:"";position:absolute;inset:7px;border:1.5px solid rgba(255,255,255,.5);border-radius:1.5px}
+.brand b{font-size:13px;font-weight:700;letter-spacing:-.01em;color:#33352f}
+
+.nav{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:7px;
+ font-size:13px;color:#5c5f56;text-align:left;width:100%;white-space:nowrap;transition:background .12s}
+.nav:hover{background:#eceae2}
+.nav.on{background:#e6e3d9;color:#252722;font-weight:650}
+.nav svg{width:15px;height:15px;flex:none}
+.nav .lb{flex:1;overflow:hidden;text-overflow:ellipsis}
+.nav .cnt{font-size:11px;color:#8d8a80;font-variant-numeric:tabular-nums;flex:none;min-width:12px;text-align:right}
+.nav.on .cnt{color:#6d7066}
+.nav .cnt:empty{display:none}
+
+.fold{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:7px;font-size:12px;color:#8d8a80;width:100%;white-space:nowrap}
+.fold:hover{background:#eceae2;color:#5c5f56}
+.fold svg{width:14px;height:14px;flex:none;transition:transform .2s}
+.fold b{font-weight:400}
+.app.mini .fold svg{transform:rotate(180deg)}
+
+.sync{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#a8a59b;
+ padding:9px 9px 3px;margin-top:6px;border-top:1px solid #e6e3d9;white-space:nowrap}
+.dot{width:5px;height:5px;border-radius:50%;background:#2f6b4f;flex:none}
+
+.app.mini .brand b,.app.mini .nav .lb,.app.mini .nav .cnt,
+.app.mini .fold b,.app.mini .sync .st{display:none}
+.app.mini .nav,.app.mini .fold{justify-content:center;padding:9px 0}
+.app.mini .brand{justify-content:center;padding:3px 0 15px}
+.app.mini .sync{justify-content:center;padding:9px 0 3px}
+
+/* ---------- 主区 ---------- */
+.main{display:flex;flex-direction:column;min-width:0;min-height:0;background:#fdfdfb}
+.topbar{display:flex;align-items:center;gap:11px;padding:11px 24px;min-height:53px;
+ border-bottom:1px solid #eeece5;background:#fdfdfb}
+.crumb{font-size:12px;color:#a8a59b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crumb b{color:#3b3d38;font-size:13.5px;font-weight:650;margin-left:2px}
+.acts{margin-left:auto;display:flex;gap:6px;flex:none}
+.pill{font-size:11.5px;color:#6d7066;border:1px solid #e2dfd5;border-radius:6px;
+ padding:5px 11px;background:#fbfaf7;white-space:nowrap;transition:.12s}
+.pill:hover{background:#f4f2ec;border-color:#d5d1c5}
+.burger{display:none;width:32px;height:32px;place-items:center;border-radius:6px;color:#5c5f56;flex:none}
+.burger:hover{background:#f2f0e9}
+
+.body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:26px 28px 72px}
+.wrap{max-width:712px;margin:0 auto}
+.page-h{font-size:22px;font-weight:750;letter-spacing:-.02em;color:#1f211e}
+.page-s{font-size:11.5px;color:#a8a59b;margin-top:4px;letter-spacing:.01em}
+
+/* 输入行 */
+.entry{display:flex;align-items:center;gap:8px;margin:20px 0 4px;
+ border:1px solid #e2dfd5;border-radius:8px;background:#fff;padding:0 5px 0 13px;transition:.15s}
+.entry:focus-within{border-color:#adc3b6;box-shadow:0 0 0 3px rgba(47,107,79,.07)}
+.entry input{flex:1;padding:11px 0;font-size:13.5px;min-width:0}
+.entry input::placeholder{color:#bcb9ae}
+.entry .b{flex:none;background:#2f6b4f;color:#fff;font-size:12px;font-weight:650;
+ padding:6px 14px;border-radius:6px;margin:5px 0;white-space:nowrap;transition:.12s}
+.entry .b:hover{background:#27583f}
+.entry .b:active{transform:translateY(1px)}
+
+/* 列表 */
+.list{margin-top:6px}
+.row{display:flex;align-items:flex-start;gap:11px;padding:12px 2px;border-bottom:1px solid #f2f0e9;position:relative}
+.row.inb{gap:0;padding-left:0}
+.row:last-child{border-bottom:0}
+.cb{width:15px;height:15px;border-radius:4px;border:1.5px solid #c9c6bc;flex:none;
+ margin-top:2px;transition:.12s;position:relative}
+.cb:hover{border-color:#2f6b4f}
+.cb.done{background:#2f6b4f;border-color:#2f6b4f}
+.cb.done::after{content:"";position:absolute;left:4.2px;top:1.2px;width:4.4px;height:8px;
+ border:solid #fff;border-width:0 1.6px 1.6px 0;transform:rotate(42deg)}
+.tx{flex:1;min-width:0}
+.tx .t{font-size:13.5px;color:#33352f;line-height:1.55;word-break:break-word}
+.tx .t.done{color:#a8a59b;text-decoration:line-through;text-decoration-thickness:1px}
+.pin{width:10px;height:10px;fill:#d9a441;display:inline-block;vertical-align:1.5px;margin-right:5px}
+.meta{font-size:10.5px;color:#b8b5ab;margin-top:4px;display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.meta .tag{color:#8d9c92;background:#eef3f0;padding:1px 6px;border-radius:4px;font-size:10px}
+
+.act{margin-left:auto;display:flex;gap:1px;opacity:0;transition:opacity .12s;flex:none}
+.row:hover .act{opacity:1}
+@media(hover:none){.act{opacity:1}}
+.act button{width:27px;height:27px;border-radius:5px;display:grid;place-items:center;color:#b8b5ab;transition:.12s}
+.act button:hover{background:#f2f0e9;color:#5c5f56}
+.act button svg{width:15px;height:15px}
+.act button[data-star]{color:#a8a59b}
+.act button[data-star]:hover{color:#d9a441}
+.act button[data-star].on{color:#d9a441}
+.act button[data-star].on:hover{color:#b8862f}
+.act button.del:hover{color:#b4574a;background:#f8efed}
+.act .ox{font-size:10.5px;padding:0 8px;width:auto;height:27px;white-space:nowrap;color:#6d7066;border:1px solid #e6e3d9}
+.act .ox:hover{background:#f4f7f4;border-color:#bfd3c7;color:#2f6b4f}
+
+.grp{font-size:10.5px;letter-spacing:.11em;color:#a8a59b;font-weight:700;
+ margin:28px 0 2px;display:flex;align-items:center;gap:9px}
+.grp::after{content:"";flex:1;height:1px;background:#eeece5}
+
+/* 空状态 */
+.empty{padding:46px 20px 30px;text-align:center}
+.empty .ic{width:46px;height:46px;margin:0 auto 14px;border-radius:13px;background:#f2f0e9;
+ display:grid;place-items:center;color:#b8b5ab}
+.empty .ic svg{width:22px;height:22px}
+.empty .t1{font-size:13.5px;color:#5c5f56;font-weight:600}
+.empty .t2{font-size:12px;color:#a8a59b;margin-top:6px;line-height:1.75}
+.empty .t2 kbd{font:inherit;font-size:11px;background:#f2f0e9;border:1px solid #e6e3d9;
+ border-radius:4px;padding:1px 5px;color:#6d7066}
+
+/* 统计卡 */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:22px}
+.stat{background:#fbfaf7;border:1px solid #eae7dd;border-radius:10px;padding:16px 16px 14px}
+.stat .n{font-size:26px;font-weight:750;letter-spacing:-.03em;color:#1f211e;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat .k{font-size:11.5px;color:#a8a59b;margin-top:6px}
+.stat.hot .n{color:#2f6b4f}
+
+/* 待建设 */
+.soon{margin-top:24px;border:1px dashed #ddd8ca;border-radius:10px;padding:26px 22px;background:#fbfaf7}
+.soon .t1{font-size:13.5px;font-weight:650;color:#5c5f56;margin-bottom:8px}
+.soon .t2{font-size:12px;color:#98958b;line-height:1.85}
+.soon .t2 b{color:#6d7066;font-weight:600}
+
+/* 浮动提示（删除撤销 / 导出反馈） */
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);
+ background:#2b2d29;color:#f0eee6;border-radius:9px;padding:8px 8px 8px 15px;
+ display:flex;align-items:center;gap:10px;font-size:12.5px;line-height:1.4;
+ box-shadow:0 10px 30px -12px rgba(0,0,0,.55);opacity:0;pointer-events:none;
+ transition:opacity .18s,transform .18s;z-index:60;max-width:calc(100vw - 28px)}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast .m{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast button{flex:none;color:#93d3ae;font-size:12.5px;font-weight:650;padding:3px 8px;border-radius:5px}
+.toast button:hover{background:rgba(255,255,255,.08)}
+
+/* ---------- 同步页 ---------- */
+.syc{background:#fbfaf7;border:1px solid #eae7dd;border-radius:11px;padding:19px 20px 17px;margin-top:18px}
+.syc .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}
+.syc .hd .tt{font-size:13.5px;font-weight:650;color:#3d3f36}
+.syc .st{font-size:10.5px;padding:2px 9px;border-radius:20px;background:#eee9d8;color:#8a7b3f;font-weight:650;white-space:nowrap;letter-spacing:.02em}
+.syc .st.on{background:#dcefe2;color:#2f6b4f}
+.syc .st.off{background:#f1efe8;color:#9c988c}
+.syc .rw{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid #f1eee5;font-size:12.5px;line-height:1.6}
+.syc .rw:last-of-type{border-bottom:0}
+.syc .rw .k{color:#8a877c;flex:none}
+.syc .rw .v{color:#3d3f36;font-weight:600;text-align:right;word-break:break-word}
+.btnrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
+.btnrow button{flex:none;border:1px solid #ded9c9;background:#fff;color:#4a4c42;
+  font-size:12.5px;font-weight:600;padding:8px 15px;border-radius:7px;cursor:pointer;
+  font-family:inherit;transition:background .14s,border-color .14s}
+.btnrow button:hover{background:#f7f5ee;border-color:#cfc9b6}
+.btnrow button.primary{background:#2f6b4f;border-color:#2f6b4f;color:#fff}
+.btnrow button.primary:hover{background:#27583f}
+.btnrow button:disabled{opacity:.45;cursor:not-allowed}
+.btnrow button:disabled:hover{background:#fff;border-color:#ded9c9}
+.btnrow button.primary:disabled:hover{background:#2f6b4f;border-color:#2f6b4f}
+.hint{margin-top:13px;font-size:11.5px;color:#9c988c;line-height:1.85}
+.hint b{color:#6b6d62;font-weight:650}
+.hint .warn{color:#a8712c}
+.syc .rw.stp .k{width:15px;flex:none;color:#ada99e;font-variant-numeric:tabular-nums}
+.syc .rw.stp .v{text-align:left;font-weight:400;color:#585a50;flex:1}
+
+#scrim{display:none}
+.foot-note{font-size:10.5px;color:#c2bfb4;margin-top:34px;line-height:1.7}
+
+/* ---------- 窄屏 ---------- */
+@media(max-width:860px){
+  .app,.app.mini{grid-template-columns:1fr}
+  .side{position:fixed;top:0;bottom:0;left:0;width:248px;z-index:30;
+   transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);
+   box-shadow:10px 0 32px -6px rgba(0,0,0,.30)}
+  .app.drawer .side{transform:none}
+  .app.mini .brand b,.app.mini .nav .lb,.app.mini .nav .cnt,
+  .app.mini .fold b,.app.mini .sync .st{display:inline}
+  .app.mini .nav,.app.mini .fold{justify-content:flex-start;padding:8px 9px}
+  .app.mini .brand{justify-content:flex-start;padding:3px 8px 15px}
+  .app.mini .sync{justify-content:flex-start}
+  .app.mini .fold{display:none}
+  #scrim{display:block;position:fixed;inset:0;background:rgba(28,30,27,.46);z-index:25;
+   opacity:0;pointer-events:none;transition:opacity .22s}
+  .app.drawer #scrim{opacity:1;pointer-events:auto}
+  .burger{display:grid}
+  .fold{display:none}
+  .topbar{padding:9px 14px;min-height:50px}
+  .body{padding:20px 15px 80px}
+  .page-h{font-size:20px}
+  .stats{grid-template-columns:1fr 1fr;gap:9px}
+  .stat:nth-child(3){grid-column:1/-1}
+  .act{opacity:1}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="side" id="side">
+    <div class="brand"><div class="avatar"></div><b>我的工作台</b></div>
+    <nav id="nav"></nav>
+    <div class="grow"></div>
+    <button class="fold" id="fold">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.8 4.2L6 8l3.8 3.8"/></svg>
+      <b>收起侧栏</b>
+    </button>
+    <div class="sync"><i class="dot"></i><span class="st" id="st">已保存 · 本地</span></div>
+  </aside>
+  <div id="scrim"></div>
+
+  <div class="toast" id="toast"><span class="m"></span><button id="undo" hidden>撤销</button></div>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="burger" id="burger" aria-label="菜单">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2.4 4.4h11.2M2.4 8h11.2M2.4 11.6h11.2"/></svg>
+      </button>
+      <div class="crumb">我的工作台<b id="crumb">/ 今日</b></div>
+      <div class="acts">
+        <button class="pill" id="imp">导入</button>
+        <button class="pill" id="exp">导出</button>
+        <input type="file" id="impfile" accept="application/json,.json" hidden>
+      </div>
+    </header>
+    <section class="body" id="body"></section>
+  </main>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= core.js ================= */
+/* ---------- core.js ----------
+   纯函数层：不碰 DOM、不碰 localStorage、不碰文件系统。
+   唯一目的是能脱离浏览器单测——合并算法（mergeRecords）昨晚错过三次。
+   浏览器里这些都以函数声明存在，会被提升，调用顺序无关。 */
+
+var WK = ['日','一','二','三','四','五','六'];
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+
+/* 删除要盖过另一台设备上「那个更晚的修改」，否则删掉的东西会自己回来。
+   所以墓碑的时间戳不是「现在」，是「现在和旧 up 里更大的那个 + 1」。 */
+function bumpUp(x){
+  x.up = Math.max(Date.now(), (x.up || 0) + 1);
+}
+
+
+/* 墓碑赢过同 up 的修改，也赢过 up 更小的修改。
+   不同步的删除会「复活」：B 设备那条旧记录的 up 只要比墓碑大，就会盖回来。 */
+function newer(a, b){
+  var ua = a.up || 0, ub = b.up || 0;
+  if (ua !== ub) return ua > ub;
+  if (!!a.del !== !!b.del) return !!a.del;
+  return false;
+}
+
+/* 合并：同 id 比 up，大的赢；本地没有的直接收下。墓碑也是记录，一样参与比较。
+   纯函数：只改传入的两个数组，不碰全局 S —— 这样能离开浏览器跑用例。
+   注意 lmap 只在开头建一次，不随 push 更新，这是原实现的行为，别改。 */
+function mergeRecords(todos, inbox, remote){
+  var lmap = {};
+  todos.forEach(function(x){ lmap[x.id] = x; });
+  inbox.forEach(function(x){ lmap[x.id] = x; });
+
+  var st = { add:0, upd:0, same:0, tomb:0 };
+  [{ arr: remote.todos || [], to: todos },
+   { arr: remote.inbox || [], to: inbox }].forEach(function(g){
+    g.arr.forEach(function(r){
+      if (!r || !r.id) return;
+      var l = lmap[r.id];
+      if (!l) { g.to.push(r); st.add++; return; }
+      if (newer(r, l)) {
+        Object.keys(r).forEach(function(k){ l[k] = r[k]; });
+        if (r.del) {
+          st.tomb++;
+        } else {
+          /* 远端这条「更晚」且没带 del 字段，说明它在那台设备上还活着。
+             原来的写法只覆盖远端有的键，本地那个 del:1 会留在原地 ——
+             记录内容更新了，却永久藏在墓碑里，等于凭空丢一条。
+             场景：A 删了它，B 在收到删除之前又编辑了一版并同步，B 的 up 更大。 */
+          if (l.del) l.del = 0;
+          st.upd++;
+        }
+      } else {
+        st.same++;
+      }
+    });
+  });
+  return st;
+}
+
+/* ---------- 时间 ---------- */
+function fmt(ts){
+  if (!ts) return '';
+  var d = new Date(), diff = d.getTime() - ts;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff/60000) + ' 分钟前';
+  var t = new Date(ts);
+  var sameDay = t.toDateString() === d.toDateString();
+  if (sameDay) return Math.floor(diff/3600000) + ' 小时前';
+  var y = new Date(d.getTime() - 86400000);
+  if (t.toDateString() === y.toDateString()) return '昨天';
+  return (t.getMonth()+1) + ' 月 ' + t.getDate() + ' 日';
+}
+
+function todayLine(){
+  var d = new Date();
+  return d.getFullYear() + ' 年 ' + (d.getMonth()+1) + ' 月 ' + d.getDate() + ' 日 · 星期' + WK[d.getDay()];
+}
+
+function dayKey(d){
+  d = d || new Date();
+  return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+}
+
+function weekStart(){
+  var d = new Date();
+  var w = d.getDay() === 0 ? 7 : d.getDay();   // 周一为一周开始
+  var m = new Date(d.getFullYear(), d.getMonth(), d.getDate() - w + 1);
+  return m.getTime();
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+
+/* node 测试用的出口。浏览器里 module 不存在，这段整体跳过，不产生任何副作用。 */
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { uid: uid, bumpUp: bumpUp, newer: newer, mergeRecords: mergeRecords,
+                     fmt: fmt, todayLine: todayLine, dayKey: dayKey, weekStart: weekStart,
+                     esc: esc };
+}
+
+/* ================= store.js ================= */
+/* ---------- store.js ----------
+   数据落地：localStorage 只是缓存，workbench-sync.json 才是真身。
+   还包括「存不住就得说存不住」的探测，和底部那条浮动提示。 */
+
+/* ---------- 存储 ----------
+   两层：localStorage 只是缓存，workbench-sync.json 才是真身。
+   换文件名、换浏览器、清缓存，缓存全丢也没关系——json 还在，打开就收回来。
+   反过来只靠 localStorage 就是这一版之前的样子：改个名数据就没了。 */
+var KEY = 'myworkbench.v1';
+
+/* 图标 */
+var IC = {
+  today:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3.3"/><path d="M8 1.3v1.5M8 13.2v1.5M1.3 8h1.5M13.2 8h1.5M3.3 3.3l1 1M11.7 11.7l1 1M12.7 3.3l-1 1M4.3 11.7l-1 1"/></svg>',
+  inbox:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2 9.2V13h12V9.2"/><path d="M2 9.2l2-6h8l2 6"/><path d="M2 9.2h3.2l.9 1.6h3.8l.9-1.6H14"/></svg>',
+  folder:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M1.9 12.7V3.8h4.3l1.5 1.9h6.4v7z"/></svg>',
+  note:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3.3" y="2.2" width="9.4" height="11.6" rx="1.4"/><path d="M5.7 5.7h4.6M5.7 8.1h4.6M5.7 10.5h3"/></svg>',
+  review:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11.6l3.5-3.9 2.5 2.1 5.3-5.9"/><path d="M2.2 14h11.6"/></svg>',
+  pin:'<svg class="pin" viewBox="0 0 16 16"><path d="M8 1.5l1.95 3.95 4.35.63-3.15 3.07.75 4.33L8 11.44 4.1 13.5l.75-4.33L1.7 6.08l4.35-.63z"/></svg>',
+  starOn:'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.9l1.83 3.7 4.09.6-2.96 2.88.7 4.07L8 11.2l-3.66 1.95.7-4.07L2.08 6.2l4.09-.6z"/></svg>',
+  starOff:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"><path d="M8 2.4l1.72 3.48 3.85.56-2.79 2.71.66 3.83L8 11.16l-3.44 1.82.66-3.83L2.43 6.44l3.85-.56z"/></svg>',
+  x:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4.4 4.4l7.2 7.2M11.6 4.4l-7.2 7.2"/></svg>',
+  sync:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 13.8h8.4a3 3 0 0 0 .35-5.98A4.4 4.4 0 0 0 6.05 6.9a3.1 3.1 0 0 0-.25 6.9z"/><path d="M8.2 10.7l1.8-1.8 1.8 1.8"/></svg>',
+  arrow:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9.5M9 4.5L12.5 8 9 11.5"/></svg>'
+};
+
+var VIEWS = [
+  {k:'today', label:'今日', ic:'today'},
+  {k:'inbox', label:'收件箱', ic:'inbox'},
+  {k:'projects', label:'项目', ic:'folder'},
+  {k:'notes', label:'笔记', ic:'note'},
+  {k:'review', label:'回顾', ic:'review'},
+  {k:'sync', label:'同步', ic:'sync'}
+];
+
+var S = null;
+
+/* ---------- 存储 ---------- */
+
+/* 有些预览环境（iframe 沙箱）不给 localStorage。存不住就要说存不住，
+   不能底部写着「已保存」而刷新之后什么都没了。 */
+var CAN_SAVE = (function(){
+  try {
+    localStorage.setItem('__wb_probe__','1');
+    localStorage.removeItem('__wb_probe__');
+    return true;
+  } catch(e){ return false; }
+})();
+
+function load(){
+  var d = null;
+  try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ d = null; }
+  if (!d || !Array.isArray(d.todos)) {
+    d = { todos:[], inbox:[], view:'today', mini:false, lastSave:0 };
+  }
+  if (!Array.isArray(d.inbox)) d.inbox = [];
+  if (!d.view) d.view = 'today';
+
+  /* 同步要用两样东西：设备标识，和每条记录的最后修改时间。
+     老数据没有 up，用 created 兜底，避免一上来就被判成「最旧」。 */
+  if (!d.devId) d.devId = uid();
+  var t0 = Date.now();
+  d.todos.concat(d.inbox).forEach(function(x){
+    if (!x.up) x.up = x.created || t0;
+    if (x.del === undefined) x.del = 0;
+  });
+  return d;
+}
+
+function save(){
+  S.lastSave = Date.now();
+  if (CAN_SAVE) {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); }
+    catch(e){ CAN_SAVE = false; }
+  }
+  stampSync();
+}
+
+function stampSync(){
+  var el = document.getElementById('st');
+  if (!el) return;
+  if (!CAN_SAVE) {
+    el.textContent = '临时模式 · 关掉就没了';
+    clearTimeout(stampSync._t);
+    return;
+  }
+  el.textContent = '已保存 · 刚刚';
+  clearTimeout(stampSync._t);
+  stampSync._t = setTimeout(function(){
+    var el2 = document.getElementById('st');
+    if (el2) el2.textContent = '已保存 · 本地';
+  }, 2600);
+}
+
+/* ---------- 浮动提示 ---------- */
+var toastFn = null, toastTimer = null;
+function toast(msg, undoFn){
+  var el = document.getElementById('toast');
+  el.querySelector('.m').textContent = msg;
+  var u = document.getElementById('undo');
+  if (undoFn) { u.hidden = false; toastFn = undoFn; }
+  else { u.hidden = true; toastFn = null; }
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, undoFn ? 5200 : 2200);
+}
+function hideToast(){
+  var el = document.getElementById('toast');
+  if (el) el.classList.remove('on');
+  toastFn = null;
+}
+
+/* ================= sync.js ================= */
+/* ---------- sync.js ----------
+   文件夹同步：句柄存 IndexedDB、写入后读回点数、启动时悄悄看一眼远端。
+   合并算法的本体在 core.js 的 mergeRecords()，这里只是把本地状态递进去。 */
+
+/* 合并的入口：把 S 里的两个数组交给纯函数，返回统计。 */
+function mergeInto(remote){
+  return mergeRecords(S.todos, S.inbox, remote);
+}
+
+/* ==========================================================
+   同步模块 · 文件通道
+   ----------------------------------------------------------
+   为什么不直接调百度网盘 API：2026-11-17 在浏览器里实测三条请求
+   （简单 GET / 带 Authorization / PUT），全部 TypeError: Failed to fetch，
+   控制台原文 blocked by CORS policy: No Access-Control-Allow-Origin。
+   请求发出去了，服务端也答了，只是浏览器不许页面读结果。
+   浏览器拦不住的是「往用户已授权的本地文件夹写文件」，所以走这条。
+   ========================================================== */
+
+var SYNC_FILE = 'workbench-sync.json';
+var syncHandle = null;
+var SY = { perm:'none', at:0, busy:false, note:'' };
+
+/* --- 目录句柄存 IndexedDB。刷新后还在，但写入权限可能要再确认一次 --- */
+function idbOp(mode, fn){
+  return new Promise(function(res){
+    var req;
+    try { req = indexedDB.open('wb-sync', 1); } catch(e){ res(null); return; }
+    req.onupgradeneeded = function(){ req.result.createObjectStore('kv'); };
+    req.onerror = function(){ res(null); };
+    req.onsuccess = function(){
+      try {
+        var tx = req.result.transaction('kv', mode);
+        fn(tx.objectStore('kv'), res);
+      } catch(e){ res(null); }
+    };
+  });
+}
+function idbGet(k){
+  return idbOp('readonly', function(st, res){
+    var q = st.get(k);
+    q.onsuccess = function(){ res(q.result || null); };
+    q.onerror = function(){ res(null); };
+  });
+}
+function idbSet(k, v){
+  return idbOp('readwrite', function(st, res){ st.put(v, k); res(v); });
+}
+function idbDel(k){
+  return idbOp('readwrite', function(st, res){ st.delete(k); res(true); });
+}
+
+function hasFSA(){
+  return !!(window.showDirectoryPicker && window.isSecureContext);
+}
+
+async function permOf(h, ask){
+  if (!h) return 'none';
+  try {
+    var o = { mode:'readwrite' };
+    var p = await h.queryPermission(o);
+    if (p !== 'granted' && ask) p = await h.requestPermission(o);
+    return p;
+  } catch(e){ return 'none'; }
+}
+
+async function pickFolder(){
+  if (!hasFSA()) { toast('这个浏览器不支持选文件夹'); return; }
+  if (SY.busy) return;
+  SY.busy = true; SY.note = '';
+  render({});
+  try {
+    var h = await window.showDirectoryPicker({ mode:'readwrite', id:'wb-sync' });
+    syncHandle = h;
+    await idbSet('dir', h);
+    SY.perm = await permOf(h, false);
+    SY.busy = false;
+    toast('已连接「' + (h.name || '这个文件夹') + '」');
+    render({});
+    await syncNow('full', { silent:true });
+    return;
+  } catch(e){
+    if (e.name !== 'AbortError') { SY.note = '选择失败：' + (e.message || e.name); }
+  }
+  SY.busy = false;
+  render({});
+}
+
+async function forgetFolder(){
+  syncHandle = null;
+  SY.perm = 'none'; SY.at = 0; SY.note = '';
+  await idbDel('dir');
+  render({});
+  toast('已断开，文件夹里的文件没动');
+}
+
+/* 写：写完读回来点数。不能只凭 close() 没报错就说成功。 */
+async function pushRemote(){
+  if (!syncHandle) throw new Error('还没有选择文件夹');
+  var perm = await permOf(syncHandle, true);
+  if (perm !== 'granted') throw new Error('浏览器没给写入权限');
+  var fh = await syncHandle.getFileHandle(SYNC_FILE, { create:true });
+  var w = await fh.createWritable();
+  var payload = {
+    v: 2,
+    devId: S.devId,
+    savedAt: Date.now(),
+    todos: S.todos,
+    inbox: S.inbox
+  };
+  await w.write(JSON.stringify(payload, null, 1));
+  await w.close();
+
+  var f = await fh.getFile();
+  var back = JSON.parse(await f.text());
+  var got = (back.todos || []).length + (back.inbox || []).length;
+  var want = S.todos.length + S.inbox.length;
+  if (got !== want) throw new Error('写回条数不对：应 ' + want + ' 实 ' + got);
+  return back;
+}
+
+async function fetchRemote(){
+  if (!syncHandle) throw new Error('还没有选择文件夹');
+  var perm = await permOf(syncHandle, true);
+  if (perm !== 'granted') throw new Error('浏览器没给读取权限');
+  var fh;
+  try { fh = await syncHandle.getFileHandle(SYNC_FILE); }
+  catch(e){ return null; }
+  var txt = await (await fh.getFile()).text();
+  if (!txt || !txt.trim()) return null;
+  return JSON.parse(txt);
+}
+
+/* 墓碑留 30 天足够让所有设备都收到，之后就清掉，否则文件只增不减 */
+function sweep(){
+  var cut = Date.now() - 30 * 86400000;
+  var n0 = S.todos.length + S.inbox.length;
+  S.todos = S.todos.filter(function(x){ return !(x.del && (x.up || 0) < cut); });
+  S.inbox = S.inbox.filter(function(x){ return !(x.del && (x.up || 0) < cut); });
+  return n0 - (S.todos.length + S.inbox.length);
+}
+
+async function syncNow(mode, opt){
+  opt = opt || {};
+  if (SY.busy) return;
+  if (!syncHandle) { toast('先选一个同步文件夹'); return; }
+  SY.busy = true; SY.note = '';
+  render({});
+  try {
+    var st = null, back = null;
+
+    if (mode !== 'up') {
+      var remote = await fetchRemote();
+      if (remote) {
+        st = mergeInto(remote);
+      } else if (mode === 'down') {
+        SY.note = '文件夹里还没有 ' + SYNC_FILE + '，这台设备可能是第一个';
+      }
+    }
+
+    if (mode !== 'down') {
+      back = await pushRemote();
+      SY.at = back.savedAt;
+    }
+
+    sweep();
+    save();
+    SY.perm = 'granted';
+    SY.busy = false;
+    render({});
+
+    if (opt.silent) {
+      if (st && (st.add || st.upd || st.tomb)) {
+        toast('合并了 ' + (st.add + st.upd) + ' 条来自另一台设备');
+      }
+      return;
+    }
+    if (st && (st.add || st.upd || st.tomb)) {
+      toast('同步完成：新增 ' + st.add + ' · 更新 ' + st.upd
+        + (st.tomb ? ' · 删除 ' + st.tomb : '') + ' · 未变 ' + st.same);
+    } else if (st) {
+      toast('两边一致，没有要合的东西');
+    } else {
+      toast('已写入同步文件夹');
+    }
+  } catch(e){
+    SY.busy = false;
+    SY.note = e.message || String(e);
+    render({});
+    toast('同步失败：' + SY.note);
+  }
+}
+
+/* 启动时悄悄看一眼：远端比本地新就提示一句，不擅自改数据 */
+async function autocheck(){
+  try {
+    var h = await idbGet('dir');
+    if (!h) return;
+    syncHandle = h;
+    SY.perm = await permOf(h, false);
+    if (SY.perm !== 'granted') { if (S.view === 'sync') render({}); return; }
+    var remote = await fetchRemote();
+
+    /* 文件夹里连 json 都没有 —— 这台设备是第一次连，把现在的数据种进去，
+       否则网盘里永远只有一个 html，换台电脑打开就是空的。 */
+    if (!remote) {
+      var n0 = S.todos.length + S.inbox.length;
+      if (n0) {
+        await pushRemote();
+        toast('已把这台设备的 ' + n0 + ' 条记录写进文件夹');
+      } else {
+        SY.note = '文件夹里还没有 ' + SYNC_FILE + '，这台设备也没有数据';
+      }
+      if (S.view === 'sync') render({});
+      return;
+    }
+
+    /* 本地缓存丢了（换了文件名 / 换了浏览器 / 清了缓存）而文件夹里有数据：
+       直接收下。这条是「换了台电脑打开是空的」的正解。 */
+    var emptyLocal = !S.todos.length && !S.inbox.length;
+    var remoteN = (remote.todos || []).length + (remote.inbox || []).length;
+    if (emptyLocal && remoteN) {
+      var got = mergeInto(remote);
+      save(); render({});
+      toast('已从文件夹恢复 ' + got.add + ' 条记录');
+      return;
+    }
+
+    /* 两边都有：照常合并。以前这里只弹一句「另一台有更新」就不管了，
+       等于把「打开就能看到别人的改动」这个最基本的要求丢了。 */
+    if (!emptyLocal && remoteN) {
+      var st = mergeInto(remote);
+      if (st.add || st.upd || st.tomb) {
+        save(); render({});
+        toast('从文件夹同步了 ' + (st.add + st.upd) + ' 条'
+          + (st.tomb ? '，删除 ' + st.tomb + ' 条' : ''));
+        return;
+      }
+    }
+    if (S.view === 'sync') render({});
+  } catch(e){}
+}
+
+function viewSync(){
+  var ok = hasFSA();
+  var connected = !!syncHandle;
+  var granted = SY.perm === 'granted';
+
+  var h = '<div class="wrap"><h1 class="page-h">同步</h1>'
+    + '<div class="page-s">两台设备之间借百度网盘的同步文件夹传数据，不走它的接口</div>';
+
+  /* 卡片一：连接状态 */
+  var stCls = 'off', stTxt = '未设置';
+  if (!ok) { stCls = 'off'; stTxt = '不支持'; }
+  else if (connected) { stCls = granted ? 'on' : ''; stTxt = granted ? '已连接' : '待授权'; }
+
+  h += '<div class="syc"><div class="hd"><span class="tt">同步文件夹</span>'
+    + '<span class="st ' + stCls + '">' + stTxt + '</span></div>';
+
+  if (!ok) {
+    h += '<div class="hint">这个浏览器不支持直接读写文件夹，需要 <b>Chrome 或 Edge</b>。'
+      + '<br>这一版没有第二条同步路可走：右上角的「导出」只能备份，导不回来。换浏览器打开就能用。</div></div>';
+  } else if (!connected) {
+    h += '<div class="hint">选一个文件夹。建议选<b>百度网盘同步空间</b>里的目录——客户端会自动把它同步到其他设备。</div>'
+      + '<div class="btnrow"><button class="primary" id="pick">选择文件夹</button></div></div>';
+  } else {
+    h += '<div class="rw"><span class="k">文件夹</span><span class="v">' + esc(syncHandle.name || '（未命名文件夹）') + '</span></div>'
+      + '<div class="rw"><span class="k">上次同步</span><span class="v">' + (SY.at ? fmt(SY.at) : '还没同步过') + '</span></div>'
+      + '<div class="rw"><span class="k">本机标识</span><span class="v">' + esc(S.devId.slice(-6)) + '</span></div>';
+    if (SY.note) {
+      h += '<div class="rw"><span class="k">状态</span><span class="v"><span class="warn">' + esc(SY.note) + '</span></span></div>';
+    }
+    h += '<div class="btnrow">'
+      + '<button class="primary" id="syn"' + (SY.busy ? ' disabled' : '') + '>' + (SY.busy ? '同步中…' : '立即同步') + '</button>'
+      + '<button id="synup"' + (SY.busy ? ' disabled' : '') + '>只上传</button>'
+      + '<button id="syndown"' + (SY.busy ? ' disabled' : '') + '>只下载</button>'
+      + '<button id="forget"' + (SY.busy ? ' disabled' : '') + '>断开</button>'
+      + '</div>';
+    if (!granted) {
+      /* 权限没给，打开时就读不到数据，会看起来像「数据没了」。
+         所以这里必须有一键恢复，而不是让人去猜要点哪个。 */
+      h += '<div class="hint"><b>浏览器把写入权限收回去了</b>，所以这次打开没能读数据。'
+        + '点下面这个按钮恢复一次，之后每次打开都会自动读。</div>'
+        + '<div class="btnrow"><button class="primary" id="reauth">恢复权限</button></div>';
+    }
+    h += '</div>';
+  }
+
+  /* 卡片二：接线步骤 */
+  h += '<div class="syc"><div class="hd"><span class="tt">怎么接百度网盘</span>'
+    + '<span class="st off">文件通道</span></div>'
+    + '<div class="rw stp"><span class="k">1</span><span class="v">电脑上装百度网盘客户端，打开「同步空间」</span></div>'
+    + '<div class="rw stp"><span class="k">2</span><span class="v">找到同步空间对应的本地文件夹</span></div>'
+    + '<div class="rw stp"><span class="k">3</span><span class="v">回这里点「选择文件夹」，选它</span></div>'
+    + '<div class="rw stp"><span class="k">4</span><span class="v">另一台设备做同样的事，选同一个同步目录</span></div>'
+    + '<div class="hint">写进去的文件叫 <b>' + SYNC_FILE + '</b>，几十 KB。'
+    + '百度网盘免费版每月给 1GB 同步流量，这点量用不完。'
+    + '<br>手机浏览器不给网页选文件夹的能力，所以这一步只能在一台电脑上做——是浏览器的限制，不是功能没做。</div></div>';
+
+  /* 卡片三：为什么不直接调接口（把实测结果摊开） */
+  h += '<div class="syc"><div class="hd"><span class="tt">为什么不直接调百度网盘接口</span>'
+    + '<span class="st off">实测</span></div>'
+    + '<div class="hint">2026-11-17 在浏览器里真发了三条请求（简单 GET、带 Authorization、PUT），'
+    + '全部返回 <b>TypeError: Failed to fetch</b>，控制台原文是 '
+    + '<b>blocked by CORS policy: No “Access-Control-Allow-Origin” header</b>。'
+    + '请求确实发出去了，服务端也答了，只是浏览器不许页面读结果。<br><br>'
+    + '浏览器管不了的是「往你亲手授权的本地文件夹写文件」。所以这一版走文件，不走接口。</div></div>';
+
+  h += '<div class="foot-note">冲突按每条记录的最后修改时间判，大头留给新的那份。'
+    + '两台设备时钟差得多时可能判错，所以启动时只提示、不自动覆盖——要合就点「立即同步」，一次算完。</div>';
+
+  return h + '</div>';
+}
+
+/* ================= view.js ================= */
+/* ---------- view.js ----------
+   渲染层：只读 S 和本地变量，产 HTML 字符串。所有用户输入都过 esc()。 */
+
+/* ---------- 渲染 ---------- */
+function counts(){
+  var open = 0, done = 0;
+  S.todos.forEach(function(t){ if (t.del) return; t.done ? done++ : open++; });
+  var ib = 0;
+  S.inbox.forEach(function(t){ if (!t.del) ib++; });
+  return {open:open, done:done, inbox:ib};
+}
+
+function renderNav(){
+  var c = counts();
+  var html = '';
+  VIEWS.forEach(function(v){
+    var n = '';
+    if (v.k === 'today') n = c.open > 0 ? String(c.open) : '';
+    if (v.k === 'inbox') n = c.inbox > 0 ? String(c.inbox) : '';
+    html += '<button class="nav' + (S.view === v.k ? ' on' : '') + '" data-view="' + v.k + '">'
+      + IC[v.ic] + '<span class="lb">' + v.label + '</span><span class="cnt">' + n + '</span></button>';
+  });
+  document.getElementById('nav').innerHTML = html;
+  var cur = VIEWS.filter(function(v){ return v.k === S.view; })[0] || VIEWS[0];
+  document.getElementById('crumb').textContent = '/ ' + cur.label;
+  document.title = cur.label + ' · 我的工作台';
+}
+
+function rowHtml(t, isInbox){
+  var meta = '';
+  if (isInbox) {
+    meta = '<div class="meta">' + fmt(t.created) + '</div>';
+  } else {
+    meta = '<div class="meta">'
+      + (t.doneAt ? ('完成于 ' + fmt(t.doneAt)) : fmt(t.created))
+      + '</div>';
+  }
+  var acts = '';
+  if (isInbox) {
+    acts = '<div class="act">'
+      + '<button class="ox" data-conv="' + t.id + '" title="转成待办">转待办</button>'
+      + '<button class="del" data-del="' + t.id + '" title="删掉">' + IC.x + '</button></div>';
+  } else {
+    acts = '<div class="act">'
+      + '<button data-star="' + t.id + '" class="' + (t.star ? 'on' : '') + '" title="' + (t.star ? '取消重点' : '标为重点') + '">' + (t.star ? IC.starOn : IC.starOff) + '</button>'
+      + '<button class="del" data-del="' + t.id + '" title="删除">' + IC.x + '</button></div>';
+  }
+  return '<div class="row' + (isInbox ? ' inb' : '') + '">'
+    + (isInbox ? '' : '<button class="cb' + (t.done ? ' done' : '') + '" data-tog="' + t.id + '" aria-label="完成"></button>')
+    + '<div class="tx"><div class="t' + (t.done ? ' done' : '') + '">' + (t.star ? IC.pin : '') + esc(t.text) + '</div>' + meta + '</div>'
+    + acts + '</div>';
+}
+
+function emptyHtml(icon, t1, t2){
+  return '<div class="empty"><div class="ic">' + IC[icon] + '</div>'
+    + '<div class="t1">' + t1 + '</div><div class="t2">' + t2 + '</div></div>';
+}
+
+function viewToday(){
+  var live = S.todos.filter(function(t){ return !t.del; });
+  var open = live.filter(function(t){ return !t.done; });
+  var done = live.filter(function(t){ return t.done; });
+  open.sort(function(a,b){ return (b.star - a.star) || (b.created - a.created); });
+  done.sort(function(a,b){ return (b.doneAt || 0) - (a.doneAt || 0); });
+
+  var h = '<div class="wrap"><h1 class="page-h">今日</h1>'
+    + '<div class="page-s">' + todayLine() + '</div>'
+    + '<div class="entry"><input id="inp" type="text" placeholder="添加一件事… 以 ! 开头可标为重点" autocomplete="off"><button class="b" id="add">添加</button></div>';
+
+  if (open.length) {
+    h += '<div class="list">' + open.map(function(t){ return rowHtml(t, false); }).join('') + '</div>';
+  } else if (!done.length) {
+    h += emptyHtml('today', '今天还没有事', '在上面输入框写一件，按 <kbd>Enter</kbd> 就行。先只写一件，别列清单。');
+  }
+
+  if (done.length) {
+    h += '<div class="grp">已完成 ' + done.length + '</div><div class="list">'
+      + done.map(function(t){ return rowHtml(t, false); }).join('') + '</div>';
+  }
+
+  h += '<div class="foot-note">' + (CAN_SAVE
+      ? '数据存在这台设备的浏览器里，不上传。想换设备用「导出」带走。'
+      : '当前预览环境不允许本地存储，数据只在这个窗口里有效。用「导出」可以拿走。')
+    + '</div></div>';
+  return h;
+}
+
+function viewInbox(){
+  var list = S.inbox.filter(function(x){ return !x.del; })
+    .sort(function(a,b){ return b.created - a.created; });
+  var h = '<div class="wrap"><h1 class="page-h">收件箱</h1>'
+    + '<div class="page-s">' + (list.length ? list.length + ' 条待清理 · 想到什么先丢进来' : '想到什么先丢进来，不用当时就决定') + '</div>'
+    + '<div class="entry"><input id="inp" type="text" placeholder="记一笔…" autocomplete="off"><button class="b" id="add">记下</button></div>';
+
+  if (list.length) {
+    h += '<div class="list">' + list.map(function(t){ return rowHtml(t, true); }).join('') + '</div>';
+  } else {
+    h += emptyHtml('inbox', '收件箱是空的', '这里是「先接住，回头再理」的地方。写一句就够，不必完整。');
+  }
+  h += '<div class="foot-note">清理节奏：每条只有两个出路——变成待办，或者删掉。别让它堆成第二份待办。</div></div>';
+  return h;
+}
+
+function viewReview(){
+  var now = Date.now();
+  var ws = weekStart();
+  var doneToday = S.todos.filter(function(t){
+    return !t.del && t.done && t.doneAt && new Date(t.doneAt).toDateString() === new Date().toDateString();
+  }).length;
+  var doneWeek = S.todos.filter(function(t){ return !t.del && t.done && t.doneAt && t.doneAt >= ws; }).length;
+  var inboxOpen = S.inbox.filter(function(x){ return !x.del; }).length;
+  var h = '<div class="wrap"><h1 class="page-h">回顾</h1>'
+    + '<div class="page-s">不追数字，只看积压有没有在涨</div>'
+    + '<div class="stats">'
+    + '<div class="stat hot"><div class="n">' + doneToday + '</div><div class="k">今天完成</div></div>'
+    + '<div class="stat"><div class="n">' + doneWeek + '</div><div class="k">本周完成</div></div>'
+    + '<div class="stat"><div class="n">' + inboxOpen + '</div><div class="k">收件箱积压</div></div>'
+    + '</div>';
+  h += '<div class="soon"><div class="t1">这一版只有这三个数</div>'
+    + '<div class="t2">下一版会加：连续完成天数、每条待办从记下到完成用了多久、以及「积压超过 7 天的条目」自动浮出来。<b>现在先不加</b>——数字多了就没人看了。</div></div>';
+  h += '</div>';
+  return h;
+}
+
+function viewSoon(kind){
+  var cfg = {
+    projects:{h:'项目', s:'把待办归到项目下，按项目看进度', ic:'folder',
+      next:'项目 = 一组相关待办的容器。你可能想：「Q4 复盘」下面挂 5 件事，做完 3 件就显示 60%。'},
+    notes:{h:'笔记', s:'比待办长、比文档短的东西', ic:'note',
+      next:'和收件箱的区别：收件箱是「还没想清楚的一句话」，笔记是「已经想清楚、要留存的一段」。合并、打标签、全文搜索都在这一版之后。'}
+  }[kind];
+  return '<div class="wrap"><h1 class="page-h">' + cfg.h + '</h1>'
+    + '<div class="page-s">' + cfg.s + '</div>'
+    + '<div class="soon"><div class="t1">这一版先不做</div>'
+    + '<div class="t2">' + cfg.next + '<br><br>先让你把「今日 + 收件箱」用起来。这两块跑顺了，才知道' + cfg.h + '该长什么样——现在做，只能靠我猜。</div></div></div>';
+}
+
+function render(opts){
+  opts = opts || {};
+  renderNav();
+  var body = document.getElementById('body');
+  var keep = opts.top ? 0 : body.scrollTop;
+  var html = '';
+  if (S.view === 'today') html = viewToday();
+  else if (S.view === 'inbox') html = viewInbox();
+  else if (S.view === 'review') html = viewReview();
+  else if (S.view === 'sync') html = viewSync();
+  else html = viewSoon(S.view);
+  body.innerHTML = html;
+
+  var inp = document.getElementById('inp');
+  if (inp) {
+    inp.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+        e.preventDefault();
+        submit();
+      }
+    });
+    var btn = document.getElementById('add');
+    if (btn) btn.addEventListener('click', submit);
+    if (opts.focus) setTimeout(function(){ inp.focus(); }, 0);
+  }
+
+  /* 同步页的按钮不走事件委托，单独绑 */
+  var bPick = document.getElementById('pick');
+  if (bPick) bPick.addEventListener('click', pickFolder);
+  var bSyn = document.getElementById('syn');
+  if (bSyn) bSyn.addEventListener('click', function(){ syncNow('full'); });
+  var bUp = document.getElementById('synup');
+  if (bUp) bUp.addEventListener('click', function(){ syncNow('up'); });
+  var bDown = document.getElementById('syndown');
+  if (bDown) bDown.addEventListener('click', function(){ syncNow('down'); });
+  var bForget = document.getElementById('forget');
+  if (bForget) bForget.addEventListener('click', forgetFolder);
+  var bRe = document.getElementById('reauth');
+  if (bRe) bRe.addEventListener('click', function(){
+    if (!syncHandle) return;
+    permOf(syncHandle, true).then(function(p){
+      SY.perm = p;
+      if (p === 'granted') { toast('权限已恢复'); autocheck(); }
+      else { toast('浏览器还是没给权限'); render({}); }
+    });
+  });
+
+  body.scrollTop = keep;
+}
+
+/* ================= actions.js ================= */
+/* ---------- actions.js ----------
+   写操作：增删改、导入导出、事件委托。删一律留墓碑，不真删。 */
+
+/* ---------- 动作 ---------- */
+function submit(){
+  var inp = document.getElementById('inp');
+  if (!inp) return;
+  var v = inp.value.trim();
+  if (!v) return;
+
+  var now = Date.now();
+  if (S.view === 'inbox') {
+    S.inbox.push({id:uid(), text:v, created:now, up:now, del:0});
+  } else {
+    var star = false;
+    if (/^[!！]/.test(v)) { star = true; v = v.replace(/^[!！]\s*/, ''); }
+    if (!v) return;
+    S.todos.push({id:uid(), text:v, done:false, doneAt:0, star:star, created:now, up:now, del:0});
+  }
+  save();
+  render({focus:true, top:true});
+}
+
+function findTodo(id){
+  for (var i=0;i<S.todos.length;i++) if (S.todos[i].id === id) return S.todos[i];
+  return null;
+}
+
+document.addEventListener('click', function(e){
+  var t = e.target.closest ? e.target.closest('[data-view],[data-tog],[data-star],[data-del],[data-conv]') : null;
+
+  if (t && t.dataset.view) {
+    S.view = t.dataset.view;
+    document.getElementById('app').classList.remove('drawer');
+    save(); render({top:true});
+    return;
+  }
+  if (t && t.dataset.tog) {
+    var todo = findTodo(t.dataset.tog);
+    if (todo) {
+      todo.done = !todo.done;
+      todo.doneAt = todo.done ? Date.now() : 0;
+      todo.up = Date.now();
+      save(); render();
+    }
+    return;
+  }
+  if (t && t.dataset.star) {
+    var td = findTodo(t.dataset.star);
+    if (td) { td.star = !td.star; td.up = Date.now(); save(); render(); }
+    return;
+  }
+  if (t && t.dataset.del) {
+    var id = t.dataset.del;
+    var gone = null;
+    S.todos.concat(S.inbox).forEach(function(x){ if (x.id === id) gone = x; });
+    if (!gone) return;
+    /* 不真删，留墓碑。真删了另一台设备一同步就把它复活了。 */
+    gone.del = 1;
+    bumpUp(gone);
+    save(); render();
+    var brief = gone.text.length > 14 ? gone.text.slice(0,14) + '…' : gone.text;
+    toast('已删除「' + brief + '」', function(){
+      gone.del = 0;
+      bumpUp(gone);
+      save(); render();
+    });
+    return;
+  }
+  if (t && t.dataset.conv) {
+    var id2 = t.dataset.conv;
+    var item = null;
+    S.inbox.forEach(function(x){ if (x.id === id2) item = x; });
+    if (item) {
+      item.del = 1;
+      bumpUp(item);
+      var tnow = Date.now();
+      S.todos.push({id:uid(), text:item.text, done:false, doneAt:0, star:false, created:tnow, up:tnow, del:0});
+    }
+    save(); render();
+    return;
+  }
+});
+
+document.getElementById('burger').addEventListener('click', function(){
+  document.getElementById('app').classList.add('drawer');
+});
+document.getElementById('scrim').addEventListener('click', function(){
+  document.getElementById('app').classList.remove('drawer');
+});
+document.getElementById('fold').addEventListener('click', function(){
+  S.mini = !S.mini;
+  document.getElementById('app').classList.toggle('mini', S.mini);
+  save();
+});
+document.getElementById('undo').addEventListener('click', function(){
+  var fn = toastFn;
+  hideToast();
+  if (fn) fn();
+});
+document.getElementById('exp').addEventListener('click', function(){
+  var data = JSON.stringify({v:1, exportedAt:new Date().toISOString(), todos:S.todos, inbox:S.inbox}, null, 2);
+  var blob = new Blob([data], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '我的工作台-' + dayKey() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast('已导出 JSON，文件在下载目录里');
+});
+
+/* 导入：不覆盖，走 mergeInto 逐条比 up。导错文件不会把现有数据弄丢。 */
+document.getElementById('imp').addEventListener('click', function(){
+  document.getElementById('impfile').click();
+});
+document.getElementById('impfile').addEventListener('change', function(e){
+  var f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  f.text().then(function(txt){
+    var d;
+    try { d = JSON.parse(txt); } catch(err){ throw new Error('不是合法的 JSON'); }
+    if (!d || (!Array.isArray(d.todos) && !Array.isArray(d.inbox))) {
+      throw new Error('里面没有 todos / inbox 这两个数组');
+    }
+    var st = mergeInto({ todos: d.todos || [], inbox: d.inbox || [] });
+    save(); render();
+    toast('已合并：新增 ' + st.add + ' · 更新 ' + st.upd
+      + (st.tomb ? ' · 删除 ' + st.tomb : '') + ' · 未变 ' + st.same);
+  }).catch(function(err){
+    toast('导入失败：' + (err.message || '文件读不出来'));
+  });
+});
+
+/* ================= main.js ================= */
+/* ---------- main.js ----------
+   启动：读盘、首屏提示、悄悄看一眼远端、自动聚焦。 */
+
+/* ---------- 启动 ---------- */
+S = load();
+document.getElementById('app').classList.toggle('mini', !!S.mini);
+if (!CAN_SAVE) {
+  var st0 = document.getElementById('st');
+  if (st0) st0.textContent = '临时模式 · 关掉就没了';
+  var dn = document.querySelector('.dot');
+  if (dn) { dn.style.background = '#c08a2e'; }
+}
+// 跨天：隔夜回来，「今日」要是新的
+var bootDay = dayKey();
+setInterval(function(){
+  if (dayKey() !== bootDay) { bootDay = dayKey(); render(); }
+}, 60000);
+
+/* 首屏无内容时给一条提示，避免"空白不知道干什么" */
+render();
+
+/* 上一次连着同步文件夹的话，悄悄看一眼远端有没有更新 */
+setTimeout(autocheck, 900);
+
+/* 输入框首次自动聚焦（桌面） */
+if (window.innerWidth > 860 && S.view === 'today') {
+  var i0 = document.getElementById('inp');
+  if (i0 && !S.todos.length) setTimeout(function(){ i0.focus(); }, 120);
+}
+})();
+</script>
+</body>
+</html>
