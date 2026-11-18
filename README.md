@@ -166,7 +166,7 @@ access-control-allow-headers: Authorization, Content-Type, If-Match, ...
 
 多行用 `%0A` 分隔，一行一条，`- ` `1. ` `[ ] ` 前缀会被吃掉。收完立刻 `replaceState` 把 query 擦掉，否则刷新一次重复入库一次。
 
-iOS 快捷指令：新建一个「分享」扩展，动作是「打开 URL」，填 `https://joy5215.github.io/lalabox/?add=[快捷指令输入]`。
+iOS 快捷指令：新建一个「分享」扩展，动作是「打开 URL」，填 `https://joy5215.github.io/workbench/?add=[快捷指令输入]`。
 
 ## 这次拆分修掉的一个真 bug
 
