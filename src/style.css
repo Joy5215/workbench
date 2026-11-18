@@ -227,15 +227,20 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
 .quad{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}
 .qc{background:#fbfaf7;border:1px solid #eae7dd;border-radius:11px;padding:13px 14px 10px;
  display:flex;flex-direction:column;min-height:132px}
-.qc .qh{display:flex;align-items:center;gap:7px;margin-bottom:4px}
-.qc .qh .qi{width:16px;height:16px;color:#b8b5ab;flex:none;display:grid;place-items:center}
-.qc .qh .qi svg{width:14px;height:14px}
+/* 标题行的图标位要从格子的 padding 里「拉回来」，占住勾选框的 15px：
+   图标到文字 11px = 勾选框右边缘到文字 11px（.row 的 gap），于是标题首字与
+   任务文案左边缘同一条线。之前是「图标 16px + gap 7px」，两边差 4px。 */
+.qc .qh{display:flex;align-items:center;gap:11px;margin:0 -14px 4px;padding:0 14px}
+.qc .qh .qi{width:15px;height:15px;color:#b8b5ab;flex:none;display:grid;place-items:center}
+.qc .qh .qi svg{width:13px;height:13px}
 .qc .qh .qt{font-size:12.5px;font-weight:650;color:#4a4c42;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .qc .qh .qn{font-size:10.5px;color:#b8b5ab;font-variant-numeric:tabular-nums;flex:none}
 .qc.hot .qh .qi{color:#b4574a}
 .qc.warm .qh .qi{color:#a8862c}
 .qc .list{margin-top:0}
-.qc .row{padding:8px 0}
+/* 格内每行左右各外扩 2px：勾选框的 15px 居中占住标题图标那条 15px 的位，
+   两边中线正好对齐；右侧叉号也顺势进到 padding 里，和数字、加号同一条右边界。 */
+.qc .row{padding:8px 2px;margin:0 -2px}
 .qc .row:first-child{padding-top:5px}
 .qc .tx .t{font-size:12.5px}
 .qc .meta{display:none}
