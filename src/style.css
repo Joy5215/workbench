@@ -201,11 +201,68 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
   .act{opacity:1}
 }
 
-/* ---------- 四象限 ---------- */
-.tx .mk{display:inline-flex;gap:4px;margin-left:2px}
-.tx .mk .tag.imp{color:#7a6a2e;background:#f4eeda}
-.tx .mk .tag.urg{color:#9c4a3c;background:#f7e8e4}
-/* 「急 / 重」两个切换：今日页悬停才露（跟星的逻辑一致），四象限里常驻 */
+/* ---------- 四象限 ----------
+   照滴答清单：2×2 撑满屏、不滚动，每格内部自己滚。
+   .body 在四象限时去掉 padding 并改成 flex 列，否则格子撑不出「满屏」的高度。 */
+.body.qmode{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.qwrap{flex:1;min-height:0;display:flex;flex-direction:column;padding:9px 11px 11px;gap:9px}
+
+/* 收集箱窄条 */
+.qbar{flex:none;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;
+ background:#fff;border:1px solid #eae7dd;font-size:12.5px;color:#4a4c42;text-align:left;width:100%}
+.qbar:hover{background:#fbfaf7}
+.qbar-ic{display:grid;place-items:center;color:#2f6b4f;flex:none}
+.qbar-ic svg{width:15px;height:15px}
+.qbar-t{flex:1;font-weight:600}
+.qbar-n{font-size:11.5px;font-weight:700;color:#2f6b4f;background:#e6f0ea;border-radius:20px;
+ padding:1px 9px;font-variant-numeric:tabular-nums}
+
+/* 2×2 网格 */
+.quad{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:9px}
+.qc{background:#fff;border:1px solid #eae7dd;border-radius:12px;padding:11px 11px 8px;
+ display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.qh{flex:none;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.qh .qd{width:7px;height:7px;border-radius:50%;background:var(--qc);flex:none}
+.qh .qt{flex:1;font-size:12px;font-weight:650;color:#3d3f36;white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+.qh .qn{font-size:10.5px;color:#bcb9ae;font-variant-numeric:tabular-nums;flex:none}
+
+/* 格内列表：自己滚，滚到顶不带动外面 */
+.qlist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px}
+.qrow{display:flex;align-items:flex-start;gap:9px;padding:7px 4px;border-radius:7px;cursor:default}
+.qrow:hover{background:#faf9f5}
+.qrow .cb{margin-top:1px}
+.qtx{flex:1;min-width:0}
+.qtx .qt1{font-size:12.5px;line-height:1.45;color:#33352f;word-break:break-word}
+.qtx .qt2{font-size:10.5px;color:#b0ada2;margin-top:1px;font-variant-numeric:tabular-nums}
+
+/* 格内录入（只在这一格被选中时出现） */
+.qform{flex:none;display:flex;gap:5px;margin-top:5px;padding-top:6px;border-top:1px solid #f2f0e9}
+.qform input{flex:1 1 auto;min-width:0;font-size:12.5px;padding:5px 7px;border:1px solid #e2dfd5;
+ border-radius:6px;background:#fdfdfb}
+.qform input:focus{border-color:#adc3b6;outline:none}
+.qform .qok{flex:none;font-size:11.5px;font-weight:650;color:#2f6b4f;padding:0 10px;border-radius:6px}
+.qform .qok:hover{background:#eef4f0}
+
+/* 右下角悬浮 + */
+.fab{position:absolute;right:18px;bottom:20px;width:50px;height:50px;border-radius:50%;
+ background:#2f6b4f;color:#fff;display:grid;place-items:center;
+ box-shadow:0 8px 20px -6px rgba(47,107,79,.55);transition:.15s;z-index:5}
+.fab:hover{background:#27583f}
+.fab:active{transform:scale(.94)}
+.fab svg{width:22px;height:22px}
+.main{position:relative}
+
+@media(max-width:860px){
+  .qwrap{padding:7px 8px 8px;gap:7px}
+  .quad{gap:7px}
+  .qc{padding:9px 9px 6px;border-radius:10px}
+  .qh .qt{font-size:11.5px}
+  .qtx .qt1{font-size:12px}
+  .qform input{font-size:12px}
+  .fab{right:14px;bottom:16px;width:46px;height:46px}
+}
+
 .act button[data-imp],.act button[data-urg]{font-size:10.5px;width:24px;height:24px;
  font-weight:700;color:#c9c6bc;border-radius:5px;letter-spacing:-.02em;opacity:0;transition:.12s}
 .row:hover .act button[data-imp],.row:hover .act button[data-urg]{opacity:1}
@@ -215,7 +272,6 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
 @media(hover:none){
   .act button[data-imp],.act button[data-urg]{opacity:1}
 }
-.qc .act button[data-imp],.qc .act button[data-urg]{opacity:1}
 
 .seg{display:inline-flex;gap:2px;padding:3px;background:#f2f0e9;border-radius:8px;margin:14px 0 2px}
 .seg .sg{font-size:12px;color:#7a7c72;padding:5px 12px;border-radius:6px;white-space:nowrap;transition:.12s}
@@ -224,38 +280,70 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
 .seg .sg i{font-style:normal;font-size:10px;color:#b0ada2;margin-left:5px;font-variant-numeric:tabular-nums}
 .seg .sg.on i{color:#8fb3a3}
 
-.quad{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}
-.qc{background:#fbfaf7;border:1px solid #eae7dd;border-radius:11px;padding:13px 14px 10px;
- display:flex;flex-direction:column;min-height:132px}
-/* 标题行的图标位要从格子的 padding 里「拉回来」，占住勾选框的 15px：
-   图标到文字 11px = 勾选框右边缘到文字 11px（.row 的 gap），于是标题首字与
-   任务文案左边缘同一条线。之前是「图标 16px + gap 7px」，两边差 4px。 */
-.qc .qh{display:flex;align-items:center;gap:11px;margin:0 -14px 4px;padding:0 14px}
-.qc .qh .qi{width:15px;height:15px;color:#b8b5ab;flex:none;display:grid;place-items:center}
-.qc .qh .qi svg{width:13px;height:13px}
-.qc .qh .qt{font-size:12.5px;font-weight:650;color:#4a4c42;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.qc .qh .qn{font-size:10.5px;color:#b8b5ab;font-variant-numeric:tabular-nums;flex:none}
-.qc.hot .qh .qi{color:#b4574a}
-.qc.warm .qh .qi{color:#a8862c}
-.qc .list{margin-top:0}
-/* 格内每行左右各外扩 2px：勾选框的 15px 居中占住标题图标那条 15px 的位，
-   两边中线正好对齐；右侧叉号也顺势进到 padding 里，和数字、加号同一条右边界。 */
-.qc .row{padding:8px 2px;margin:0 -2px}
-.qc .row:first-child{padding-top:5px}
-.qc .tx .t{font-size:12.5px}
-.qc .meta{display:none}
-.qc .act{margin-left:auto}
-.qc .entries{margin-top:auto;padding-top:6px}
-.qc .qadd{flex:none;padding:0 8px;font-size:13px;line-height:1;color:#c2bfb4;border-radius:5px}
-.qc .qadd:hover{color:#2f6b4f;background:#f4f7f4}
-.qc .qform{display:flex;gap:5px;margin-top:4px}
-/* flex-basis 必须是 auto：Chrome 对 <input> 的默认内在尺寸很小，
-   basis:0 时它先缩到 16px，然后因为内容宽度是 0 就不再长回去。 */
-.qc .qform input{flex:1 1 auto;min-width:0;font-size:12px;padding:5px 7px;border:1px solid #e2dfd5;
- border-radius:6px;background:#fff}
-.qc .qform input:focus{border-color:#adc3b6}
-
+/* ---------- 窄屏 ---------- */
 @media(max-width:860px){
-  .quad{grid-template-columns:1fr;gap:9px}
-  .qc{min-height:0}
+  .app,.app.mini{grid-template-columns:1fr}
+  .side{position:fixed;top:0;bottom:0;left:0;width:248px;z-index:30;
+   transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);
+   box-shadow:10px 0 32px -6px rgba(0,0,0,.30)}
+  .app.drawer .side{transform:none}
+  .app.mini .brand b,.app.mini .nav .lb,.app.mini .nav .cnt,
+  .app.mini .fold b,.app.mini .sync .st{display:inline}
+  .app.mini .nav,.app.mini .fold{justify-content:flex-start;padding:8px 9px}
+  .app.mini .brand{justify-content:flex-start;padding:3px 8px 15px}
+  .app.mini .sync{justify-content:flex-start}
+  .app.mini .fold{display:none}
+  #scrim{display:block;position:fixed;inset:0;background:rgba(28,30,27,.46);z-index:25;
+   opacity:0;pointer-events:none;transition:opacity .22s}
+  .app.drawer #scrim{opacity:1;pointer-events:auto}
+  .burger{display:grid}
+  .fold{display:none}
+  .topbar{padding:9px 14px;min-height:50px}
+  .body{padding:20px 15px 80px}
+  .page-h{font-size:20px}
+  .stats{grid-template-columns:1fr 1fr;gap:9px}
+  .stat:nth-child(3){grid-column:1/-1}
+  .act{opacity:1}
 }
+
+
+.seg{display:inline-flex;gap:2px;padding:3px;background:#f2f0e9;border-radius:8px;margin:14px 0 2px}
+.seg .sg{font-size:12px;color:#7a7c72;padding:5px 12px;border-radius:6px;white-space:nowrap;transition:.12s}
+.seg .sg:hover{color:#3d3f36}
+.seg .sg.on{background:#fff;color:#2f6b4f;font-weight:650;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.seg .sg i{font-style:normal;font-size:10px;color:#b0ada2;margin-left:5px;font-variant-numeric:tabular-nums}
+.seg .sg.on i{color:#8fb3a3}
+
+/* ---------- 底部浮层（选象限 / 收集箱清理） ---------- */
+#sheet-scrim{position:fixed;inset:0;background:rgba(28,30,27,.34);z-index:40;
+ opacity:0;pointer-events:none;transition:opacity .18s}
+#sheet-scrim.on{opacity:1;pointer-events:auto}
+.sheet-host{position:fixed;left:0;right:0;bottom:0;z-index:45;pointer-events:none;
+ display:flex;justify-content:center}
+.sh{pointer-events:auto;width:100%;max-width:440px;background:#fff;border-radius:14px 14px 0 0;
+ padding:6px 8px 10px;box-shadow:0 -10px 30px -14px rgba(0,0,0,.35);
+ animation:shup .18s cubic-bezier(.4,0,.2,1)}
+@keyframes shup{from{transform:translateY(14px);opacity:.6}to{transform:none;opacity:1}}
+.sh-h{font-size:11px;color:#a8a59b;padding:10px 10px 8px;letter-spacing:.04em}
+.sh-b{display:flex;align-items:center;gap:10px;width:100%;padding:12px 10px;border-radius:9px;
+ font-size:13.5px;color:#33352f;text-align:left}
+.sh-b:hover{background:#f6f4ee}
+.sh .qd{width:8px;height:8px;border-radius:50%;flex:none}
+.sh .qd.qi{width:15px;height:15px;border-radius:0;display:grid;place-items:center;color:#5c5f56}
+.sh .qd.qi svg{width:15px;height:15px}
+.sh-x{display:block;width:100%;text-align:center;padding:11px;color:#8a877c;font-size:12.5px;
+ border-top:1px solid #f2f0e9;margin-top:4px}
+.sh-x:hover{color:#33352f}
+.sh-e{text-align:center;color:#bcb9ae;font-size:12.5px;padding:22px 0}
+.sh-list{max-height:52vh;overflow-y:auto;overscroll-behavior:contain}
+.sh-i{padding:10px 10px;border-bottom:1px solid #f6f4ee}
+.sh-i:last-child{border-bottom:0}
+.sh-t{font-size:13px;color:#33352f;line-height:1.45;word-break:break-word}
+.sh-a{display:flex;gap:5px;margin-top:7px;align-items:center}
+.sh-a button{width:26px;height:26px;border-radius:6px;display:grid;place-items:center;
+ border:1px solid #eae7dd}
+.sh-a button:hover{background:#f6f4ee}
+.sh-a button .qd{width:9px;height:9px}
+.sh-a .sh-del{margin-left:auto;border-color:transparent;color:#c9c6bc}
+.sh-a .sh-del:hover{color:#b4574a;background:#f8eeed}
+.sh-a .sh-del svg{width:14px;height:14px}

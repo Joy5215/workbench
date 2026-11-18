@@ -50,7 +50,7 @@ function bindView(){
     if (pendingFocus) { pendingFocus = false; setTimeout(function(){ inp.focus(); }, 0); }
   }
 
-  /* 四象限每格一个输入框，它们不叫 inp（那个 id 是主输入框专用的）。
+  /* 四象限格内输入框：不叫 inp（那个 id 是主输入框专用的），
      回车走 quadSubmit，才能带上这一格的标记。 */
   Array.prototype.forEach.call(document.querySelectorAll('[data-qin]'), function(box){
     box.addEventListener('keydown', function(e){
@@ -60,6 +60,9 @@ function bindView(){
       }
     });
   });
+  var qi = document.querySelector('[data-qin]');
+  if (qi) setTimeout(function(){ qi.focus(); }, 0);
+
 
   bindSyncView();
 }
@@ -77,7 +80,61 @@ function render(opts){
   renderNav();
   var body = document.getElementById('body');
   var keep = opts.top ? 0 : body.scrollTop;
+  /* 四象限要撑满屏、自己管滚动，所以把 .body 的 padding 与滚动交给 .qwrap */
+  body.classList.toggle('qmode', S.view === 'quad');
   body.innerHTML = currentView();
   bindView();
+  renderSheet();
   body.scrollTop = keep;
+
+  /* 右下角 + 是每次渲染重建的，必须在这里绑；之前放在 bindView 里，
+     而 bindView 在 DOM 换掉之前就跑了，拿到的是上一屏那个已废弃的节点。 */
+  var fab = document.getElementById('fab');
+  if (fab) fab.addEventListener('click', openFab);
+}
+
+/* ---------- 底部浮层：选象限 / 收集箱清理 ----------
+   滴答点 + 之后先问「放进哪一格」，这里照做：四个象限按钮 + 一个收集箱按钮。
+   收集箱清理也复用一个浮层，因为两者都是「从底部升起、选一下就走」。 */
+function renderSheet(){
+  var host = document.getElementById('sheet');
+  if (!host) return;
+  var h = '';
+
+  if (S.picker) {
+    h += '<div class="sh"><div class="sh-h">放到哪一格</div>';
+    QUADS.forEach(function(q){
+      h += '<button class="sh-b" data-pick="' + q.k + '">'
+        + '<i class="qd" style="background:' + q.c + '"></i>' + esc(q.label) + '</button>';
+    });
+    h += '<button class="sh-b" data-pick="inbox">'
+      + '<i class="qd qi">' + IC.inbox + '</i>收集箱</button>';
+    h += '<button class="sh-x" data-close="1">取消</button></div>';
+  }
+
+  if (S.sheet === 'inbox') {
+    var list = S.inbox.filter(function(x){ return !x.del; })
+      .sort(function(a,b){ return b.created - a.created; });
+    h += '<div class="sh"><div class="sh-h">收集箱 · ' + list.length + ' 条</div>';
+    if (!list.length) {
+      h += '<div class="sh-e">空的</div>';
+    } else {
+      h += '<div class="sh-list">' + list.map(function(x){
+        return '<div class="sh-i"><div class="sh-t">' + esc(x.text) + '</div>'
+          + '<div class="sh-a">'
+          + QUADS.map(function(q){
+              return '<button data-move="' + x.id + '" data-to="' + q.k + '"'
+                + ' title="' + esc(q.label) + '"><i class="qd" style="background:' + q.c + '"></i></button>';
+            }).join('')
+          + '<button class="sh-del" data-del="' + x.id + '" title="删掉">' + IC.x + '</button>'
+          + '</div></div>';
+      }).join('') + '</div>';
+    }
+    h += '<div class="sh-x" data-close="1">收起</div></div>';
+  }
+
+  host.innerHTML = h;
+  host.classList.toggle('on', !!h);
+  var scrim = document.getElementById('sheet-scrim');
+  if (scrim) scrim.classList.toggle('on', !!h);
 }

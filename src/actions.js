@@ -38,10 +38,43 @@ function quadSubmit(k){
   if (!v) return;
   S.todos.push({id:uid(), text:v, done:false, doneAt:0, star:star,
                 urg:q.urg, imp:q.imp, created:now, up:now, del:0});
+  /* 连着记几件事时不要把输入框收掉；只有点「添加」才收 */
   save(); render();
-  /* 重新渲染后 DOM 换了，重新聚焦到同一格，方便连着记几件 */
   var again = document.querySelector('.qc[data-q="' + k + '"] input');
   if (again) again.focus();
+}
+
+/* 点右下角 + → 先问放进哪一格。滴答也是这个流程。 */
+function openFab(){
+  S.picker = true;
+  renderSheet();
+}
+
+/* 选中格子后，把这一格切到「可录入」状态，输入框自动聚焦 */
+function pickQuad(k){
+  S.picker = false;
+  if (k === 'inbox') {
+    S.sheet = 'inbox';
+    renderSheet();
+    return;
+  }
+  S.addQuad = (S.addQuad === k) ? '' : k;
+  save(); render();
+}
+
+/* 收集箱条目直接归到某一格：原地改标记，换到 todos 里，收集箱那条留墓碑 */
+function moveToQuad(id, k){
+  var item = null;
+  S.inbox.forEach(function(x){ if (x.id === id && !x.del) item = x; });
+  if (!item) return;
+  var q = QUAD_BY[k];
+  item.del = 1;
+  bumpUp(item);
+  var now = Date.now();
+  S.todos.push({id:uid(), text:item.text, done:false, doneAt:0, star:false,
+                urg:q.urg, imp:q.imp, created:now, up:now, del:0});
+  save(); render();
+  toast('已放进「' + q.label + '」');
 }
 
 function findTodo(id){
@@ -51,7 +84,20 @@ function findTodo(id){
 
 /* 行内加在某个象限后，容器变窄，只留「取消象限标记」和「删」；勾选框留着。 */
 document.addEventListener('click', function(e){
-  var t = e.target.closest ? e.target.closest('[data-view],[data-tog],[data-star],[data-del],[data-conv],[data-urg],[data-imp],[data-addq]') : null;
+  var t = e.target.closest ? e.target.closest(
+    '[data-view],[data-tog],[data-star],[data-del],[data-conv],[data-urg],[data-imp],[data-addq]'
+    + ',[data-pick],[data-inbox],[data-move],[data-close]') : null;
+
+  if (!t) return;
+
+  if (t.dataset.close) {
+    S.picker = false; S.sheet = '';
+    renderSheet();
+    return;
+  }
+  if (t.dataset.pick) { pickQuad(t.dataset.pick); return; }
+  if (t.dataset.inbox) { S.sheet = 'inbox'; save(); renderSheet(); return; }
+  if (t.dataset.move) { moveToQuad(t.dataset.move, t.dataset.to); return; }
 
   if (t && t.dataset.view) {
     S.view = t.dataset.view;
@@ -126,6 +172,10 @@ document.getElementById('burger').addEventListener('click', function(){
 });
 document.getElementById('scrim').addEventListener('click', function(){
   document.getElementById('app').classList.remove('drawer');
+});
+document.getElementById('sheet-scrim').addEventListener('click', function(){
+  S.picker = false; S.sheet = '';
+  renderSheet();
 });
 document.getElementById('fold').addEventListener('click', function(){
   S.mini = !S.mini;

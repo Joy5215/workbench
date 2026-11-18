@@ -45,6 +45,14 @@ async function run(c) {
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: 'networkidle0' });
 
+  /* 新版默认落在四象限（没有 #inp，只有格内输入框），
+     所以先切到今日页——这份测试比的是两个版本的「今日」，不是首页长什么样。 */
+  await page.evaluate(() => {
+    const n = document.querySelector('[data-view="today"]');
+    if (n) n.click();
+  });
+  await new Promise((r) => setTimeout(r, 200));
+
   const add = async (t) => {
     await page.waitForSelector('#inp', { timeout: 5000 });
     await page.click('#inp');

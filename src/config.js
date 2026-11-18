@@ -25,8 +25,8 @@ var IC = {
 /* 视图清单。k 是状态值，也是 views/<k>.js 里函数的键。
    newBadge: 该视图在导航上显示什么数字（返回 0 则不显示）。 */
 var VIEWS = [
-  {k:'today',  label:'今日',   ic:'today'},
   {k:'quad',   label:'四象限', ic:'quad'},
+  {k:'today',  label:'今日',   ic:'today'},
   {k:'inbox',  label:'收件箱', ic:'inbox'},
   {k:'projects', label:'项目', ic:'folder'},
   {k:'notes',  label:'笔记',   ic:'note'},
@@ -35,12 +35,13 @@ var VIEWS = [
 ];
 
 /* 四象限定义。顺序即渲染顺序（左上→右下）。
-   每格用 urg / imp 两个布尔值标识自己，记录上的同名字段直接比对。 */
+   每格用 urg / imp 两个布尔值标识自己，记录上的同名字段直接比对。
+   c 是这一格的标识色，跟滴答一样只在标题圆点上出现，不铺整块背景。 */
 var QUADS = [
-  {k:'do',    label:'重要且紧急', urg:1, imp:1, ic:'alert'},
-  {k:'plan',  label:'重要不紧急', urg:0, imp:1, ic:'spark'},
-  {k:'deleg', label:'不重要但紧急', urg:1, imp:0, ic:'users'},
-  {k:'drop',  label:'不重要不紧急', urg:0, imp:0, ic:'cloud'}
+  {k:'do',    label:'重要且紧急', urg:1, imp:1, ic:'alert', c:'#e05b4a'},
+  {k:'plan',  label:'重要不紧急', urg:0, imp:1, ic:'spark', c:'#d99a1f'},
+  {k:'deleg', label:'不重要但紧急', urg:1, imp:0, ic:'users', c:'#3f7fd0'},
+  {k:'drop',  label:'不重要不紧急', urg:0, imp:0, ic:'cloud', c:'#8a8f86'}
 ];
 
 var QUAD_BY = {};

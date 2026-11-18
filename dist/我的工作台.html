@@ -211,11 +211,68 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
   .act{opacity:1}
 }
 
-/* ---------- 四象限 ---------- */
-.tx .mk{display:inline-flex;gap:4px;margin-left:2px}
-.tx .mk .tag.imp{color:#7a6a2e;background:#f4eeda}
-.tx .mk .tag.urg{color:#9c4a3c;background:#f7e8e4}
-/* 「急 / 重」两个切换：今日页悬停才露（跟星的逻辑一致），四象限里常驻 */
+/* ---------- 四象限 ----------
+   照滴答清单：2×2 撑满屏、不滚动，每格内部自己滚。
+   .body 在四象限时去掉 padding 并改成 flex 列，否则格子撑不出「满屏」的高度。 */
+.body.qmode{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.qwrap{flex:1;min-height:0;display:flex;flex-direction:column;padding:9px 11px 11px;gap:9px}
+
+/* 收集箱窄条 */
+.qbar{flex:none;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;
+ background:#fff;border:1px solid #eae7dd;font-size:12.5px;color:#4a4c42;text-align:left;width:100%}
+.qbar:hover{background:#fbfaf7}
+.qbar-ic{display:grid;place-items:center;color:#2f6b4f;flex:none}
+.qbar-ic svg{width:15px;height:15px}
+.qbar-t{flex:1;font-weight:600}
+.qbar-n{font-size:11.5px;font-weight:700;color:#2f6b4f;background:#e6f0ea;border-radius:20px;
+ padding:1px 9px;font-variant-numeric:tabular-nums}
+
+/* 2×2 网格 */
+.quad{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:9px}
+.qc{background:#fff;border:1px solid #eae7dd;border-radius:12px;padding:11px 11px 8px;
+ display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.qh{flex:none;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.qh .qd{width:7px;height:7px;border-radius:50%;background:var(--qc);flex:none}
+.qh .qt{flex:1;font-size:12px;font-weight:650;color:#3d3f36;white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+.qh .qn{font-size:10.5px;color:#bcb9ae;font-variant-numeric:tabular-nums;flex:none}
+
+/* 格内列表：自己滚，滚到顶不带动外面 */
+.qlist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px}
+.qrow{display:flex;align-items:flex-start;gap:9px;padding:7px 4px;border-radius:7px;cursor:default}
+.qrow:hover{background:#faf9f5}
+.qrow .cb{margin-top:1px}
+.qtx{flex:1;min-width:0}
+.qtx .qt1{font-size:12.5px;line-height:1.45;color:#33352f;word-break:break-word}
+.qtx .qt2{font-size:10.5px;color:#b0ada2;margin-top:1px;font-variant-numeric:tabular-nums}
+
+/* 格内录入（只在这一格被选中时出现） */
+.qform{flex:none;display:flex;gap:5px;margin-top:5px;padding-top:6px;border-top:1px solid #f2f0e9}
+.qform input{flex:1 1 auto;min-width:0;font-size:12.5px;padding:5px 7px;border:1px solid #e2dfd5;
+ border-radius:6px;background:#fdfdfb}
+.qform input:focus{border-color:#adc3b6;outline:none}
+.qform .qok{flex:none;font-size:11.5px;font-weight:650;color:#2f6b4f;padding:0 10px;border-radius:6px}
+.qform .qok:hover{background:#eef4f0}
+
+/* 右下角悬浮 + */
+.fab{position:absolute;right:18px;bottom:20px;width:50px;height:50px;border-radius:50%;
+ background:#2f6b4f;color:#fff;display:grid;place-items:center;
+ box-shadow:0 8px 20px -6px rgba(47,107,79,.55);transition:.15s;z-index:5}
+.fab:hover{background:#27583f}
+.fab:active{transform:scale(.94)}
+.fab svg{width:22px;height:22px}
+.main{position:relative}
+
+@media(max-width:860px){
+  .qwrap{padding:7px 8px 8px;gap:7px}
+  .quad{gap:7px}
+  .qc{padding:9px 9px 6px;border-radius:10px}
+  .qh .qt{font-size:11.5px}
+  .qtx .qt1{font-size:12px}
+  .qform input{font-size:12px}
+  .fab{right:14px;bottom:16px;width:46px;height:46px}
+}
+
 .act button[data-imp],.act button[data-urg]{font-size:10.5px;width:24px;height:24px;
  font-weight:700;color:#c9c6bc;border-radius:5px;letter-spacing:-.02em;opacity:0;transition:.12s}
 .row:hover .act button[data-imp],.row:hover .act button[data-urg]{opacity:1}
@@ -225,7 +282,6 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
 @media(hover:none){
   .act button[data-imp],.act button[data-urg]{opacity:1}
 }
-.qc .act button[data-imp],.qc .act button[data-urg]{opacity:1}
 
 .seg{display:inline-flex;gap:2px;padding:3px;background:#f2f0e9;border-radius:8px;margin:14px 0 2px}
 .seg .sg{font-size:12px;color:#7a7c72;padding:5px 12px;border-radius:6px;white-space:nowrap;transition:.12s}
@@ -234,41 +290,73 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
 .seg .sg i{font-style:normal;font-size:10px;color:#b0ada2;margin-left:5px;font-variant-numeric:tabular-nums}
 .seg .sg.on i{color:#8fb3a3}
 
-.quad{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}
-.qc{background:#fbfaf7;border:1px solid #eae7dd;border-radius:11px;padding:13px 14px 10px;
- display:flex;flex-direction:column;min-height:132px}
-/* 标题行的图标位要从格子的 padding 里「拉回来」，占住勾选框的 15px：
-   图标到文字 11px = 勾选框右边缘到文字 11px（.row 的 gap），于是标题首字与
-   任务文案左边缘同一条线。之前是「图标 16px + gap 7px」，两边差 4px。 */
-.qc .qh{display:flex;align-items:center;gap:11px;margin:0 -14px 4px;padding:0 14px}
-.qc .qh .qi{width:15px;height:15px;color:#b8b5ab;flex:none;display:grid;place-items:center}
-.qc .qh .qi svg{width:13px;height:13px}
-.qc .qh .qt{font-size:12.5px;font-weight:650;color:#4a4c42;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.qc .qh .qn{font-size:10.5px;color:#b8b5ab;font-variant-numeric:tabular-nums;flex:none}
-.qc.hot .qh .qi{color:#b4574a}
-.qc.warm .qh .qi{color:#a8862c}
-.qc .list{margin-top:0}
-/* 格内每行左右各外扩 2px：勾选框的 15px 居中占住标题图标那条 15px 的位，
-   两边中线正好对齐；右侧叉号也顺势进到 padding 里，和数字、加号同一条右边界。 */
-.qc .row{padding:8px 2px;margin:0 -2px}
-.qc .row:first-child{padding-top:5px}
-.qc .tx .t{font-size:12.5px}
-.qc .meta{display:none}
-.qc .act{margin-left:auto}
-.qc .entries{margin-top:auto;padding-top:6px}
-.qc .qadd{flex:none;padding:0 8px;font-size:13px;line-height:1;color:#c2bfb4;border-radius:5px}
-.qc .qadd:hover{color:#2f6b4f;background:#f4f7f4}
-.qc .qform{display:flex;gap:5px;margin-top:4px}
-/* flex-basis 必须是 auto：Chrome 对 <input> 的默认内在尺寸很小，
-   basis:0 时它先缩到 16px，然后因为内容宽度是 0 就不再长回去。 */
-.qc .qform input{flex:1 1 auto;min-width:0;font-size:12px;padding:5px 7px;border:1px solid #e2dfd5;
- border-radius:6px;background:#fff}
-.qc .qform input:focus{border-color:#adc3b6}
-
+/* ---------- 窄屏 ---------- */
 @media(max-width:860px){
-  .quad{grid-template-columns:1fr;gap:9px}
-  .qc{min-height:0}
+  .app,.app.mini{grid-template-columns:1fr}
+  .side{position:fixed;top:0;bottom:0;left:0;width:248px;z-index:30;
+   transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);
+   box-shadow:10px 0 32px -6px rgba(0,0,0,.30)}
+  .app.drawer .side{transform:none}
+  .app.mini .brand b,.app.mini .nav .lb,.app.mini .nav .cnt,
+  .app.mini .fold b,.app.mini .sync .st{display:inline}
+  .app.mini .nav,.app.mini .fold{justify-content:flex-start;padding:8px 9px}
+  .app.mini .brand{justify-content:flex-start;padding:3px 8px 15px}
+  .app.mini .sync{justify-content:flex-start}
+  .app.mini .fold{display:none}
+  #scrim{display:block;position:fixed;inset:0;background:rgba(28,30,27,.46);z-index:25;
+   opacity:0;pointer-events:none;transition:opacity .22s}
+  .app.drawer #scrim{opacity:1;pointer-events:auto}
+  .burger{display:grid}
+  .fold{display:none}
+  .topbar{padding:9px 14px;min-height:50px}
+  .body{padding:20px 15px 80px}
+  .page-h{font-size:20px}
+  .stats{grid-template-columns:1fr 1fr;gap:9px}
+  .stat:nth-child(3){grid-column:1/-1}
+  .act{opacity:1}
 }
+
+
+.seg{display:inline-flex;gap:2px;padding:3px;background:#f2f0e9;border-radius:8px;margin:14px 0 2px}
+.seg .sg{font-size:12px;color:#7a7c72;padding:5px 12px;border-radius:6px;white-space:nowrap;transition:.12s}
+.seg .sg:hover{color:#3d3f36}
+.seg .sg.on{background:#fff;color:#2f6b4f;font-weight:650;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.seg .sg i{font-style:normal;font-size:10px;color:#b0ada2;margin-left:5px;font-variant-numeric:tabular-nums}
+.seg .sg.on i{color:#8fb3a3}
+
+/* ---------- 底部浮层（选象限 / 收集箱清理） ---------- */
+#sheet-scrim{position:fixed;inset:0;background:rgba(28,30,27,.34);z-index:40;
+ opacity:0;pointer-events:none;transition:opacity .18s}
+#sheet-scrim.on{opacity:1;pointer-events:auto}
+.sheet-host{position:fixed;left:0;right:0;bottom:0;z-index:45;pointer-events:none;
+ display:flex;justify-content:center}
+.sh{pointer-events:auto;width:100%;max-width:440px;background:#fff;border-radius:14px 14px 0 0;
+ padding:6px 8px 10px;box-shadow:0 -10px 30px -14px rgba(0,0,0,.35);
+ animation:shup .18s cubic-bezier(.4,0,.2,1)}
+@keyframes shup{from{transform:translateY(14px);opacity:.6}to{transform:none;opacity:1}}
+.sh-h{font-size:11px;color:#a8a59b;padding:10px 10px 8px;letter-spacing:.04em}
+.sh-b{display:flex;align-items:center;gap:10px;width:100%;padding:12px 10px;border-radius:9px;
+ font-size:13.5px;color:#33352f;text-align:left}
+.sh-b:hover{background:#f6f4ee}
+.sh .qd{width:8px;height:8px;border-radius:50%;flex:none}
+.sh .qd.qi{width:15px;height:15px;border-radius:0;display:grid;place-items:center;color:#5c5f56}
+.sh .qd.qi svg{width:15px;height:15px}
+.sh-x{display:block;width:100%;text-align:center;padding:11px;color:#8a877c;font-size:12.5px;
+ border-top:1px solid #f2f0e9;margin-top:4px}
+.sh-x:hover{color:#33352f}
+.sh-e{text-align:center;color:#bcb9ae;font-size:12.5px;padding:22px 0}
+.sh-list{max-height:52vh;overflow-y:auto;overscroll-behavior:contain}
+.sh-i{padding:10px 10px;border-bottom:1px solid #f6f4ee}
+.sh-i:last-child{border-bottom:0}
+.sh-t{font-size:13px;color:#33352f;line-height:1.45;word-break:break-word}
+.sh-a{display:flex;gap:5px;margin-top:7px;align-items:center}
+.sh-a button{width:26px;height:26px;border-radius:6px;display:grid;place-items:center;
+ border:1px solid #eae7dd}
+.sh-a button:hover{background:#f6f4ee}
+.sh-a button .qd{width:9px;height:9px}
+.sh-a .sh-del{margin-left:auto;border-color:transparent;color:#c9c6bc}
+.sh-a .sh-del:hover{color:#b4574a;background:#f8eeed}
+.sh-a .sh-del svg{width:14px;height:14px}
 </style>
 </head>
 <body>
@@ -301,6 +389,9 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
     </header>
     <section class="body" id="body"></section>
   </main>
+
+  <div id="sheet-scrim"></div>
+  <div class="sheet-host" id="sheet"></div>
 </div>
 
 <script>
@@ -441,8 +532,8 @@ var IC = {
 /* 视图清单。k 是状态值，也是 views/<k>.js 里函数的键。
    newBadge: 该视图在导航上显示什么数字（返回 0 则不显示）。 */
 var VIEWS = [
-  {k:'today',  label:'今日',   ic:'today'},
   {k:'quad',   label:'四象限', ic:'quad'},
+  {k:'today',  label:'今日',   ic:'today'},
   {k:'inbox',  label:'收件箱', ic:'inbox'},
   {k:'projects', label:'项目', ic:'folder'},
   {k:'notes',  label:'笔记',   ic:'note'},
@@ -451,12 +542,13 @@ var VIEWS = [
 ];
 
 /* 四象限定义。顺序即渲染顺序（左上→右下）。
-   每格用 urg / imp 两个布尔值标识自己，记录上的同名字段直接比对。 */
+   每格用 urg / imp 两个布尔值标识自己，记录上的同名字段直接比对。
+   c 是这一格的标识色，跟滴答一样只在标题圆点上出现，不铺整块背景。 */
 var QUADS = [
-  {k:'do',    label:'重要且紧急', urg:1, imp:1, ic:'alert'},
-  {k:'plan',  label:'重要不紧急', urg:0, imp:1, ic:'spark'},
-  {k:'deleg', label:'不重要但紧急', urg:1, imp:0, ic:'users'},
-  {k:'drop',  label:'不重要不紧急', urg:0, imp:0, ic:'cloud'}
+  {k:'do',    label:'重要且紧急', urg:1, imp:1, ic:'alert', c:'#e05b4a'},
+  {k:'plan',  label:'重要不紧急', urg:0, imp:1, ic:'spark', c:'#d99a1f'},
+  {k:'deleg', label:'不重要但紧急', urg:1, imp:0, ic:'users', c:'#3f7fd0'},
+  {k:'drop',  label:'不重要不紧急', urg:0, imp:0, ic:'cloud', c:'#8a8f86'}
 ];
 
 var QUAD_BY = {};
@@ -495,10 +587,14 @@ function load(){
   var d = null;
   try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ d = null; }
   if (!d || !Array.isArray(d.todos)) {
-    d = { todos:[], inbox:[], view:'today', mini:false, lastSave:0 };
+    d = { todos:[], inbox:[], view:'quad', mini:false, lastSave:0 };
   }
   if (!Array.isArray(d.inbox)) d.inbox = [];
-  if (!d.view) d.view = 'today';
+  if (!d.view) d.view = 'quad';
+  /* 界面态：+ 按钮选中了哪一格、底部浮层开着什么。不进同步文件，只存本机。 */
+  if (d.addQuad === undefined) d.addQuad = '';
+  d.picker = false;
+  d.sheet = '';
 
   /* 同步要用两样东西：设备标识，和每条记录的最后修改时间。
      老数据没有 up，用 created 兜底，避免一上来就被判成「最旧」。 */
@@ -516,6 +612,8 @@ function load(){
 }
 
 function save(){
+  /* 首屏还没做过任何写入时 localStorage 里是空的，靠它兜底 */
+  if (!S) return;
   S.lastSave = Date.now();
   if (CAN_SAVE) {
     try { localStorage.setItem(KEY, JSON.stringify(S)); }
@@ -1032,55 +1130,72 @@ VIEW_FN.today = viewToday;
 /* ---------- views/quad.js ----------
    四象限：把同一批待办按「重要 × 紧急」切开。不是另一份数据，只是另一个视角。
 
-   为什么用两个独立布尔字段而不是一个 quadrant 字符串：
-   一条任务「重要」这件事本身有含义（四象限在哪个格子是推论，不是属性）。
-   存两个布尔，以后加筛选、加排序都能直接用；存字符串则是把推论当真相。
-
-   没标过的任务落在「不重要不紧急」——那格的语义就是「还没想清楚该不该做」，
-   正好是未分类任务的归宿，不需要再造一个「未分类」格子。
+   布局照滴答清单的实际界面：2×2 撑满屏、每格标题前面一个小色点、
+   任务下面一行带日期、右下角一个悬浮 + 负责录入。
+   不做的事：不铺整块彩色背景（滴答也没有），不显示任何说明文字。
 */
 
 function quadOf(t){ return (t.urg ? 'u' : '-') + (t.imp ? 'i' : '-'); }
 
+/* 任务行下面那行小字。今天就说「今天」，否则「11月20日」。 */
+function quadWhen(t){
+  var d = t.due ? new Date(t.due) : null;
+  if (!d) return fmt(t.created);
+  if (d.toDateString() === new Date().toDateString()) return '今天';
+  return (d.getMonth()+1) + '月' + d.getDate() + '日';
+}
+
+/* 四象限里的一行：只有勾选框和两行文字，不放操作按钮——
+   一排小按钮会把本来就窄的格子挤花，滴答也没有。 */
+function quadRow(t){
+  return '<div class="qrow" data-id="' + t.id + '">'
+    + '<button class="cb" data-tog="' + t.id + '" aria-label="完成"></button>'
+    + '<div class="qtx">'
+    + '<div class="qt1">' + (t.star ? IC.pin : '') + esc(t.text) + '</div>'
+    + '<div class="qt2">' + esc(quadWhen(t)) + '</div>'
+    + '</div></div>';
+}
+
 function viewQuad(){
   var open = S.todos.filter(function(t){ return !t.del && !t.done; });
-  var doneN = S.todos.filter(function(t){ return !t.del && t.done; }).length;
+  var inboxN = S.inbox.filter(function(x){ return !x.del; }).length;
 
-  var h = '<div class="wrap">' + uiHead('四象限',
-      open.length ? open.length + ' 件待安排' + (doneN ? ' · 已完成 ' + doneN : '')
-                  : '还没有待办')
-    + '<div class="quad">';
+  var h = '<div class="qwrap">';
+
+  /* 收集箱：滴答里它就在四象限上面，一条窄条。没东西时整条不出现。 */
+  if (inboxN) {
+    h += '<button class="qbar" data-inbox="1">'
+      + '<span class="qbar-ic">' + IC.inbox + '</span>'
+      + '<span class="qbar-t">收集箱</span>'
+      + '<span class="qbar-n">' + inboxN + '</span></button>';
+  }
+
+  h += '<div class="quad">';
 
   QUADS.forEach(function(q){
     var items = open.filter(function(t){ return quadOf(t) === (q.urg ? 'u' : '-') + (q.imp ? 'i' : '-'); });
     items.sort(function(a,b){ return (b.star - a.star) || (b.created - a.created); });
+    var on = S.addQuad === q.k;
 
-    h += '<div class="qc' + (q.k === 'do' ? ' hot' : q.k === 'plan' ? ' warm' : '') + '" data-q="' + q.k + '">'
-      + '<div class="qh"><span class="qi">' + (IC[q.ic] || '') + '</span>'
-      + '<span class="qt">' + esc(q.label) + '</span>'
-      + '<span class="qn">' + (items.length || '') + '</span></div>';
-
-    if (items.length) {
-      h += '<div class="list">' + items.map(function(t){
-        return '<div class="row" data-id="' + t.id + '">'
-          + '<button class="cb" data-tog="' + t.id + '" aria-label="完成"></button>'
-          + '<div class="tx"><div class="t">' + (t.star ? IC.pin : '') + esc(t.text) + '</div></div>'
-          + '<div class="act">'
-          + '<button data-urg="' + t.id + '" class="' + (t.urg ? 'on u' : '') + '" title="紧急">急</button>'
-          + '<button data-imp="' + t.id + '" class="' + (t.imp ? 'on i' : '') + '" title="重要">重</button>'
-          + '<button class="del" data-del="' + t.id + '" title="删除">' + IC.x + '</button>'
-          + '</div></div>';
-      }).join('') + '</div>';
-    }
-
-    /* 每格都能直接加一件，加进去就带这一格的标记 */
-    h += '<div class="entries"><div class="qform">'
-      + '<input type="text" data-qin="' + q.k + '" placeholder="加一件…" autocomplete="off">'
-      + '<button class="qadd" data-addq="' + q.k + '">+</button>'
-      + '</div></div></div>';
+    h += '<div class="qc" data-q="' + q.k + '" style="--qc:' + q.c + '">'
+      + '<div class="qh"><i class="qd"></i><span class="qt">' + esc(q.label) + '</span>'
+      + '<span class="qn">' + (items.length || '') + '</span></div>'
+      + '<div class="qlist">' + items.map(quadRow).join('') + '</div>'
+      + (on
+          ? '<div class="qform"><input type="text" data-qin="' + q.k + '" placeholder="要做什么"'
+            + ' autocomplete="off"><button class="qok" data-addq="' + q.k + '">添加</button></div>'
+          : '')
+      + '</div>';
   });
 
-  return h + '</div></div>';
+  h += '</div>';
+
+  /* 右下角悬浮 +：跟滴答一样，点一下先选放进哪一格 */
+  h += '<button class="fab" id="fab" aria-label="添加任务">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">'
+    + '<path d="M12 5.6v12.8M5.6 12h12.8"/></svg></button>';
+
+  return h + '</div>';
 }
 
 VIEW_FN.quad = viewQuad;
@@ -1211,7 +1326,7 @@ function bindView(){
     if (pendingFocus) { pendingFocus = false; setTimeout(function(){ inp.focus(); }, 0); }
   }
 
-  /* 四象限每格一个输入框，它们不叫 inp（那个 id 是主输入框专用的）。
+  /* 四象限格内输入框：不叫 inp（那个 id 是主输入框专用的），
      回车走 quadSubmit，才能带上这一格的标记。 */
   Array.prototype.forEach.call(document.querySelectorAll('[data-qin]'), function(box){
     box.addEventListener('keydown', function(e){
@@ -1221,6 +1336,9 @@ function bindView(){
       }
     });
   });
+  var qi = document.querySelector('[data-qin]');
+  if (qi) setTimeout(function(){ qi.focus(); }, 0);
+
 
   bindSyncView();
 }
@@ -1238,9 +1356,63 @@ function render(opts){
   renderNav();
   var body = document.getElementById('body');
   var keep = opts.top ? 0 : body.scrollTop;
+  /* 四象限要撑满屏、自己管滚动，所以把 .body 的 padding 与滚动交给 .qwrap */
+  body.classList.toggle('qmode', S.view === 'quad');
   body.innerHTML = currentView();
   bindView();
+  renderSheet();
   body.scrollTop = keep;
+
+  /* 右下角 + 是每次渲染重建的，必须在这里绑；之前放在 bindView 里，
+     而 bindView 在 DOM 换掉之前就跑了，拿到的是上一屏那个已废弃的节点。 */
+  var fab = document.getElementById('fab');
+  if (fab) fab.addEventListener('click', openFab);
+}
+
+/* ---------- 底部浮层：选象限 / 收集箱清理 ----------
+   滴答点 + 之后先问「放进哪一格」，这里照做：四个象限按钮 + 一个收集箱按钮。
+   收集箱清理也复用一个浮层，因为两者都是「从底部升起、选一下就走」。 */
+function renderSheet(){
+  var host = document.getElementById('sheet');
+  if (!host) return;
+  var h = '';
+
+  if (S.picker) {
+    h += '<div class="sh"><div class="sh-h">放到哪一格</div>';
+    QUADS.forEach(function(q){
+      h += '<button class="sh-b" data-pick="' + q.k + '">'
+        + '<i class="qd" style="background:' + q.c + '"></i>' + esc(q.label) + '</button>';
+    });
+    h += '<button class="sh-b" data-pick="inbox">'
+      + '<i class="qd qi">' + IC.inbox + '</i>收集箱</button>';
+    h += '<button class="sh-x" data-close="1">取消</button></div>';
+  }
+
+  if (S.sheet === 'inbox') {
+    var list = S.inbox.filter(function(x){ return !x.del; })
+      .sort(function(a,b){ return b.created - a.created; });
+    h += '<div class="sh"><div class="sh-h">收集箱 · ' + list.length + ' 条</div>';
+    if (!list.length) {
+      h += '<div class="sh-e">空的</div>';
+    } else {
+      h += '<div class="sh-list">' + list.map(function(x){
+        return '<div class="sh-i"><div class="sh-t">' + esc(x.text) + '</div>'
+          + '<div class="sh-a">'
+          + QUADS.map(function(q){
+              return '<button data-move="' + x.id + '" data-to="' + q.k + '"'
+                + ' title="' + esc(q.label) + '"><i class="qd" style="background:' + q.c + '"></i></button>';
+            }).join('')
+          + '<button class="sh-del" data-del="' + x.id + '" title="删掉">' + IC.x + '</button>'
+          + '</div></div>';
+      }).join('') + '</div>';
+    }
+    h += '<div class="sh-x" data-close="1">收起</div></div>';
+  }
+
+  host.innerHTML = h;
+  host.classList.toggle('on', !!h);
+  var scrim = document.getElementById('sheet-scrim');
+  if (scrim) scrim.classList.toggle('on', !!h);
 }
 
 /* ================= actions.js ================= */
@@ -1284,10 +1456,43 @@ function quadSubmit(k){
   if (!v) return;
   S.todos.push({id:uid(), text:v, done:false, doneAt:0, star:star,
                 urg:q.urg, imp:q.imp, created:now, up:now, del:0});
+  /* 连着记几件事时不要把输入框收掉；只有点「添加」才收 */
   save(); render();
-  /* 重新渲染后 DOM 换了，重新聚焦到同一格，方便连着记几件 */
   var again = document.querySelector('.qc[data-q="' + k + '"] input');
   if (again) again.focus();
+}
+
+/* 点右下角 + → 先问放进哪一格。滴答也是这个流程。 */
+function openFab(){
+  S.picker = true;
+  renderSheet();
+}
+
+/* 选中格子后，把这一格切到「可录入」状态，输入框自动聚焦 */
+function pickQuad(k){
+  S.picker = false;
+  if (k === 'inbox') {
+    S.sheet = 'inbox';
+    renderSheet();
+    return;
+  }
+  S.addQuad = (S.addQuad === k) ? '' : k;
+  save(); render();
+}
+
+/* 收集箱条目直接归到某一格：原地改标记，换到 todos 里，收集箱那条留墓碑 */
+function moveToQuad(id, k){
+  var item = null;
+  S.inbox.forEach(function(x){ if (x.id === id && !x.del) item = x; });
+  if (!item) return;
+  var q = QUAD_BY[k];
+  item.del = 1;
+  bumpUp(item);
+  var now = Date.now();
+  S.todos.push({id:uid(), text:item.text, done:false, doneAt:0, star:false,
+                urg:q.urg, imp:q.imp, created:now, up:now, del:0});
+  save(); render();
+  toast('已放进「' + q.label + '」');
 }
 
 function findTodo(id){
@@ -1297,7 +1502,20 @@ function findTodo(id){
 
 /* 行内加在某个象限后，容器变窄，只留「取消象限标记」和「删」；勾选框留着。 */
 document.addEventListener('click', function(e){
-  var t = e.target.closest ? e.target.closest('[data-view],[data-tog],[data-star],[data-del],[data-conv],[data-urg],[data-imp],[data-addq]') : null;
+  var t = e.target.closest ? e.target.closest(
+    '[data-view],[data-tog],[data-star],[data-del],[data-conv],[data-urg],[data-imp],[data-addq]'
+    + ',[data-pick],[data-inbox],[data-move],[data-close]') : null;
+
+  if (!t) return;
+
+  if (t.dataset.close) {
+    S.picker = false; S.sheet = '';
+    renderSheet();
+    return;
+  }
+  if (t.dataset.pick) { pickQuad(t.dataset.pick); return; }
+  if (t.dataset.inbox) { S.sheet = 'inbox'; save(); renderSheet(); return; }
+  if (t.dataset.move) { moveToQuad(t.dataset.move, t.dataset.to); return; }
 
   if (t && t.dataset.view) {
     S.view = t.dataset.view;
@@ -1372,6 +1590,10 @@ document.getElementById('burger').addEventListener('click', function(){
 });
 document.getElementById('scrim').addEventListener('click', function(){
   document.getElementById('app').classList.remove('drawer');
+});
+document.getElementById('sheet-scrim').addEventListener('click', function(){
+  S.picker = false; S.sheet = '';
+  renderSheet();
 });
 document.getElementById('fold').addEventListener('click', function(){
   S.mini = !S.mini;

@@ -26,10 +26,14 @@ function load(){
   var d = null;
   try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ d = null; }
   if (!d || !Array.isArray(d.todos)) {
-    d = { todos:[], inbox:[], view:'today', mini:false, lastSave:0 };
+    d = { todos:[], inbox:[], view:'quad', mini:false, lastSave:0 };
   }
   if (!Array.isArray(d.inbox)) d.inbox = [];
-  if (!d.view) d.view = 'today';
+  if (!d.view) d.view = 'quad';
+  /* 界面态：+ 按钮选中了哪一格、底部浮层开着什么。不进同步文件，只存本机。 */
+  if (d.addQuad === undefined) d.addQuad = '';
+  d.picker = false;
+  d.sheet = '';
 
   /* 同步要用两样东西：设备标识，和每条记录的最后修改时间。
      老数据没有 up，用 created 兜底，避免一上来就被判成「最旧」。 */
@@ -47,6 +51,8 @@ function load(){
 }
 
 function save(){
+  /* 首屏还没做过任何写入时 localStorage 里是空的，靠它兜底 */
+  if (!S) return;
   S.lastSave = Date.now();
   if (CAN_SAVE) {
     try { localStorage.setItem(KEY, JSON.stringify(S)); }
