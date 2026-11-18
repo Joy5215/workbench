@@ -106,7 +106,7 @@ function ok(name, cond, extra) {
   ok('勾掉后 task 仍是完成态',
     (await todos()).some((x) => x.t === '交周报' && x.d === true));
   ok('已完成的不占四格的数',
-    (await page.evaluate(() => document.querySelector('.page-s').innerText)).includes('已完成 1 件'));
+    (await page.evaluate(() => document.querySelector('.page-s').innerText)).includes('已完成 1'));
 
   await click('[data-view="today"]');
   const titles = await page.evaluate(() =>

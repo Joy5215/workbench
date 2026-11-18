@@ -227,12 +227,11 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
 .quad{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}
 .qc{background:#fbfaf7;border:1px solid #eae7dd;border-radius:11px;padding:13px 14px 10px;
  display:flex;flex-direction:column;min-height:132px}
-.qc .qh{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.qc .qh{display:flex;align-items:center;gap:7px;margin-bottom:4px}
 .qc .qh .qi{width:16px;height:16px;color:#b8b5ab;flex:none;display:grid;place-items:center}
 .qc .qh .qi svg{width:14px;height:14px}
 .qc .qh .qt{font-size:12.5px;font-weight:650;color:#4a4c42;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .qc .qh .qn{font-size:10.5px;color:#b8b5ab;font-variant-numeric:tabular-nums;flex:none}
-.qc .qs{font-size:10.5px;color:#bcb9ae;margin-bottom:8px}
 .qc.hot .qh .qi{color:#b4574a}
 .qc.warm .qh .qi{color:#a8862c}
 .qc .list{margin-top:0}
@@ -241,7 +240,6 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
 .qc .tx .t{font-size:12.5px}
 .qc .meta{display:none}
 .qc .act{margin-left:auto}
-.qc .qempty{font-size:11px;color:#cfccc1;padding:10px 0 4px;text-align:center}
 .qc .entries{margin-top:auto;padding-top:6px}
 .qc .qadd{flex:none;padding:0 8px;font-size:13px;line-height:1;color:#c2bfb4;border-radius:5px}
 .qc .qadd:hover{color:#2f6b4f;background:#f4f7f4}

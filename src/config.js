@@ -37,10 +37,10 @@ var VIEWS = [
 /* 四象限定义。顺序即渲染顺序（左上→右下）。
    每格用 urg / imp 两个布尔值标识自己，记录上的同名字段直接比对。 */
 var QUADS = [
-  {k:'do',    label:'重要且紧急', hint:'马上做',        urg:1, imp:1, ic:'alert'},
-  {k:'plan',  label:'重要不紧急', hint:'排时间做',      urg:0, imp:1, ic:'spark'},
-  {k:'deleg', label:'不重要但紧急', hint:'能给别人就给别人', urg:1, imp:0, ic:'users'},
-  {k:'drop',  label:'不重要不紧急', hint:'尽量别做',    urg:0, imp:0, ic:'cloud'}
+  {k:'do',    label:'重要且紧急', urg:1, imp:1, ic:'alert'},
+  {k:'plan',  label:'重要不紧急', urg:0, imp:1, ic:'spark'},
+  {k:'deleg', label:'不重要但紧急', urg:1, imp:0, ic:'users'},
+  {k:'drop',  label:'不重要不紧急', urg:0, imp:0, ic:'cloud'}
 ];
 
 var QUAD_BY = {};

@@ -11,22 +11,13 @@
 
 function quadOf(t){ return (t.urg ? 'u' : '-') + (t.imp ? 'i' : '-'); }
 
-/* 空格子的话，每格不一样。都写「空着」等于没说。 */
-var QUAD_EMPTY = {
-  do:'这一格空着最好。',
-  plan:'这一格该是最满的。',
-  deleg:'没有火烧眉毛的事。',
-  drop:'不用管。'
-};
-
 function viewQuad(){
   var open = S.todos.filter(function(t){ return !t.del && !t.done; });
   var doneN = S.todos.filter(function(t){ return !t.del && t.done; }).length;
 
-  /* 只有「两标都有」的任务才需要提示——其余自然落在各自格子 */
   var h = '<div class="wrap">' + uiHead('四象限',
-      '重要 × 紧急 · ' + open.length + ' 件事待安排'
-      + (doneN ? '，已完成 ' + doneN + ' 件不在此列' : ''))
+      open.length ? open.length + ' 件待安排' + (doneN ? ' · 已完成 ' + doneN : '')
+                  : '还没有待办')
     + '<div class="quad">';
 
   QUADS.forEach(function(q){
@@ -36,8 +27,7 @@ function viewQuad(){
     h += '<div class="qc' + (q.k === 'do' ? ' hot' : q.k === 'plan' ? ' warm' : '') + '" data-q="' + q.k + '">'
       + '<div class="qh"><span class="qi">' + (IC[q.ic] || '') + '</span>'
       + '<span class="qt">' + esc(q.label) + '</span>'
-      + '<span class="qn">' + (items.length || '') + '</span></div>'
-      + '<div class="qs">' + esc(q.hint) + '</div>';
+      + '<span class="qn">' + (items.length || '') + '</span></div>';
 
     if (items.length) {
       h += '<div class="list">' + items.map(function(t){
@@ -50,8 +40,6 @@ function viewQuad(){
           + '<button class="del" data-del="' + t.id + '" title="删除">' + IC.x + '</button>'
           + '</div></div>';
       }).join('') + '</div>';
-    } else {
-      h += '<div class="qempty">' + esc(QUAD_EMPTY[q.k] || '空着') + '</div>';
     }
 
     /* 每格都能直接加一件，加进去就带这一格的标记 */
@@ -61,11 +49,7 @@ function viewQuad(){
       + '</div></div></div>';
   });
 
-  h += '</div>';
-
-  h += uiFoot('在「今日」里那两列「急 / 重」按钮是同一套标记，两边改的是同一份数据。'
-    + '勾完会从格子里消失——这一格只看还没做完的。');
-  return h + '</div>';
+  return h + '</div></div>';
 }
 
 VIEW_FN.quad = viewQuad;
