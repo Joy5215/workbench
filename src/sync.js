@@ -247,7 +247,10 @@ function viewSync(){
   var granted = SY.perm === 'granted';
 
   var h = '<div class="wrap"><h1 class="page-h">同步</h1>'
-    + '<div class="page-s">两台设备之间借百度网盘的同步文件夹传数据，不走它的接口</div>';
+    + '<div class="page-s">手机上走 GitHub；电脑上还能选个同步文件夹</div>';
+
+  /* GitHub 放最上面：它是唯一在手机上也能用的通道 */
+  h += ghCard();
 
   /* 卡片一：连接状态 */
   var stCls = 'off', stTxt = '未设置';
@@ -317,6 +320,7 @@ function viewSync(){
    这几个按钮不走事件委托（同步页要传参数、要 await），所以单独绑。
    同步页没渲染时 getElementById 全是 null，必须逐个 guard。 */
 function bindSyncView(){
+  bindGh();
   var bPick = document.getElementById('pick');
   if (bPick) bPick.addEventListener('click', pickFolder);
   var bSyn = document.getElementById('syn');

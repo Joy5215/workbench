@@ -28,25 +28,31 @@ function submit(){
    但它的**产出**可以喂进来——这是「在别处写、在这里变成结构」唯一能真做到的形态。
 
    顺手吃掉常见的前缀：`- ` `* ` `1. ` `[ ] ` `[x] `，留着它们当任务名很难看。 */
-function pasteLines(text, quadKey){
-  var lines = text.split(/\r?\n/).map(function(line){
+/* 把一段多行文本洗干净：拆行、去掉列表前缀、丢空行。
+   `- 买牛奶` `* 买牛奶` `1. 买牛奶` `[ ] 买牛奶` 在这个输入框里都只是「买牛奶」。 */
+function cleanLines(text){
+  return String(text || '').split(/\r?\n/).map(function(line){
     return line
       .replace(/^\s*[-*+•]\s+/, '')
       .replace(/^\s*\d+[.)]\s+/, '')
       .replace(/^\s*\[[ xX]?\]\s*/, '')
       .trim();
   }).filter(function(x){ return !!x; });
+}
 
-  if (lines.length < 2) return 0;
-
+/* opt.quad 指定格子（为空则按 opt.inbox 决定去收集箱还是普通待办） */
+function addMany(lines, opt){
+  opt = opt || {};
+  var q = opt.quad && QUAD_BY[opt.quad] ? QUAD_BY[opt.quad] : null;
   var now = Date.now();
-  var q = quadKey ? QUAD_BY[quadKey] : null;
   var n = 0;
+
   lines.forEach(function(t){
     var star = false;
     if (/^[!！]/.test(t)) { star = true; t = t.replace(/^[!！]\s*/, ''); }
     if (!t) return;
-    if (S.view === 'inbox' && !q) {
+
+    if (!q && opt.inbox) {
       S.inbox.push({id:uid(), text:t, created:now, up:now, del:0});
     } else {
       S.todos.push({id:uid(), text:t, done:false, doneAt:0, star:star,
@@ -54,8 +60,44 @@ function pasteLines(text, quadKey){
     }
     n++;
   });
-  save();
+  if (n) save();
   return n;
+}
+
+/* 粘贴多行：至少两行才拦，单行留给浏览器默认行为 */
+function pasteLines(text, quadKey){
+  var lines = cleanLines(text);
+  if (lines.length < 2) return 0;
+  return addMany(lines, { quad: quadKey, inbox: !quadKey && S.view === 'inbox' });
+}
+
+/* ---------- URL 入口：?add=… ----------
+   这是「接别处的东西进来」最通用的一刀：
+     iOS 快捷指令分享任何文本 → 打开这个链接 → 直接进收集箱
+     安卓任何 App 「分享 → 复制」再用桌面快捷方式打开同样有效
+     桌面浏览器可以用书签小工具拼这个 URL
+   带上 &to=do|plan|deleg|drop 就直接落进那一格。
+   收完立刻把 query 擦掉，否则刷新一次就重复入库一次。 */
+function catchUrlAdd(){
+  try {
+    var p = new URLSearchParams(location.search);
+    var txt = p.get('add') || p.get('t') || p.get('text') || '';
+    if (!txt) return;
+
+    var to = (p.get('to') || '').trim();
+    var lines = cleanLines(txt);
+    /* 没指定格子就进收集箱 —— 这是「收集」这个词的字面意思，
+       先收下，回头再决定放哪一格。 */
+    var n = addMany(lines, { quad: to, inbox: !to });
+
+    /* 不管有没有加成功，query 都得清掉 */
+    history.replaceState(null, '', location.pathname + location.hash);
+
+    if (!n) { toast('链接里没有可用的内容'); return; }
+    if (!to && S.view !== 'inbox') { S.view = 'inbox'; save(); }
+    render({top:true});
+    toast('收到 ' + n + ' 条');
+  } catch(e){}
 }
 
 /* 给一个输入框挂上「多行粘贴自动拆条」。quadKey 为空表示这是主输入框。 */

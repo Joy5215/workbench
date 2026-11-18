@@ -21,6 +21,7 @@ dist/我的工作台.html      ← 只有这一个文件是给用户用的
 │   ├── config.js             配置：视图清单、图标、四象限定义。只有数据没有逻辑
 │   ├── store.js              数据落地：localStorage 缓存 + 探测能不能存
 │   ├── sync.js               文件夹同步：句柄、写入、启动时对照远端、同步页按钮绑定
+│   ├── sync-gh.js            GitHub 通道：Contents API 读写、乐观锁、冲突重试
 │   ├── ui.js                 通用组件：标题、输入行、空状态、统计卡、分段控件
 │   ├── views/                一个功能一个文件，加功能只动这里
 │   │   ├── today.js            今日
@@ -105,11 +106,48 @@ python3 build.py --check    # 只校验 dist 是否与 src 一致，不改文件
 bash tests/run.sh
 ```
 
-三项，任一失败非 0 退出：
+五项，任一失败非 0 退出：
 
 1. **构建一致性** —— `dist` 是否等于 `src` 拼出来的（防止改了源码忘了重建）
 2. **单元测试** —— 22 个用例，全部对着一次真实翻车写的（见下）
 3. **行为等价** —— 起本地服务，用 chromium 打开基线和构建版，各加 3 条、删 1 条、切视图，比对脱敏后的 localStorage、渲染文本、DOM 行数、控制台错误
+4. **四象限交互** —— 31 条：满屏布局、选格录入、勾掉消失、收集箱归位、多行粘贴拆条
+5. **GitHub 通道与收件** —— 18 条：`?add=` 三种归宿、前缀清理、query 擦除、仓库地址容错、token 不进数据文件
+
+## 两条同步通道
+
+| | GitHub | 文件夹 |
+|---|---|---|
+| 手机能用 | ✅ | ❌ 浏览器不给网页选文件夹 |
+| 需要什么 | 一个 token | 电脑 + 网盘客户端 |
+| 数据在哪 | 仓库里一个 json | 网盘同步目录 |
+| 适用 | 日常主力 | 不想给仓库权限时 |
+
+GitHub 这条能成立，是因为它家开了 CORS：
+
+```
+OPTIONS https://api.github.com/repos/o/r/contents/x
+access-control-allow-origin: *
+access-control-allow-methods: GET, POST, PATCH, PUT, DELETE
+access-control-allow-headers: Authorization, Content-Type, If-Match, ...
+```
+
+百度网盘、坚果云、飞书的响应里都没有 `allow-origin`，所以那三家只能绕。
+
+**冲突**：PUT 带 `sha` 当乐观锁。撞车了（409/422）就重拉、合并、再推一次——不重试的话那一次冲突等于「我这台的改动丢了」。
+
+**token 只存本机**，`myworkbench.gh` 这个 key，不进 `workbench-sync.json`。用 fine-grained token，只授权一个仓库的 Contents 读写。
+
+## 从外面收件
+
+```
+?add=文本            进收集箱
+?add=文本&to=do      直接进「重要且紧急」（plan / deleg / drop 同理）
+```
+
+多行用 `%0A` 分隔，一行一条，`- ` `1. ` `[ ] ` 前缀会被吃掉。收完立刻 `replaceState` 把 query 擦掉，否则刷新一次重复入库一次。
+
+iOS 快捷指令：新建一个「分享」扩展，动作是「打开 URL」，填 `https://joy5215.github.io/lalabox/?add=[快捷指令输入]`。
 
 ## 这次拆分修掉的一个真 bug
 

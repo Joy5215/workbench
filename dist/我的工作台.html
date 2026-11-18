@@ -359,6 +359,16 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
 .sh-a .sh-del{margin-left:auto;border-color:transparent;color:#c9c6bc}
 .sh-a .sh-del:hover{color:#b4574a;background:#f8eeed}
 .sh-a .sh-del svg{width:14px;height:14px}
+
+/* ---------- GitHub 通道表单 ---------- */
+.ghf{display:grid;gap:9px;margin:0 0 14px}
+.ghf label{display:grid;grid-template-columns:52px 1fr;align-items:center;gap:10px}
+.ghf label span{font-size:12px;color:#8a877c}
+.ghf input{width:100%;min-width:0;font-size:12.5px;padding:7px 9px;border:1px solid #e2dfd5;
+ border-radius:7px;background:#fdfdfb;font-family:inherit;color:#33352f}
+.ghf input:focus{border-color:#adc3b6;outline:none;background:#fff}
+.syc code{font-family:ui-monospace,Menlo,monospace;font-size:11px;background:#f1efe8;
+ padding:1px 5px;border-radius:4px;color:#5c5f56}
 </style>
 </head>
 <body>
@@ -910,7 +920,10 @@ function viewSync(){
   var granted = SY.perm === 'granted';
 
   var h = '<div class="wrap"><h1 class="page-h">同步</h1>'
-    + '<div class="page-s">两台设备之间借百度网盘的同步文件夹传数据，不走它的接口</div>';
+    + '<div class="page-s">手机上走 GitHub；电脑上还能选个同步文件夹</div>';
+
+  /* GitHub 放最上面：它是唯一在手机上也能用的通道 */
+  h += ghCard();
 
   /* 卡片一：连接状态 */
   var stCls = 'off', stTxt = '未设置';
@@ -980,6 +993,7 @@ function viewSync(){
    这几个按钮不走事件委托（同步页要传参数、要 await），所以单独绑。
    同步页没渲染时 getElementById 全是 null，必须逐个 guard。 */
 function bindSyncView(){
+  bindGh();
   var bPick = document.getElementById('pick');
   if (bPick) bPick.addEventListener('click', pickFolder);
   var bSyn = document.getElementById('syn');
@@ -999,6 +1013,333 @@ function bindSyncView(){
       else { toast('浏览器还是没给权限'); render({}); }
     });
   });
+}
+
+/* ================= sync-gh.js ================= */
+/* ---------- sync-gh.js ----------
+   GitHub 通道：把同步文件放进仓库，前端直接调 Contents API 读写。
+
+   为什么这条能成、而百度网盘 / 坚果云 / 飞书都不行 —— 2026-11-18 实测：
+     api.github.com 的 OPTIONS 预检返回
+       access-control-allow-origin: *
+       access-control-allow-methods: GET, POST, PATCH, PUT, DELETE
+       access-control-allow-headers: Authorization, Content-Type, If-Match, ...
+     连一个 401 的响应也照带 allow-origin。那三家的响应里没有这个头。
+
+   代价说清楚：
+   1. token 存在本机 localStorage。XSS 能拿走它。所以必须用 fine-grained token，
+      只授权这一个仓库的 Contents 读写，泄露了也只影响这一个文件。
+   2. 仓库是 public 的话，这个 json 人人都能看。要私密就换私有仓库（Pages 照样能用）。
+   3. 一次 PUT 上限 1MB，装几万条待办够用；超过会在写入前先报错。 */
+
+var GH_KEY = 'myworkbench.gh';
+var GH = { busy:false, note:'', at:0 };
+
+function ghCfg(){
+  try { return JSON.parse(localStorage.getItem(GH_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function ghSet(cfg){
+  try { localStorage.setItem(GH_KEY, JSON.stringify(cfg)); } catch(e){}
+}
+function ghReady(){
+  var c = ghCfg();
+  return !!(c.repo && c.token);
+}
+/* 允许用户只填 "owner/repo" 或者整个 https 地址，都认 */
+function ghSplitRepo(v){
+  var s = String(v || '').trim()
+    .replace(/^https?:\/\/github\.com\//, '')
+    .replace(/\.git$/, '')
+    .replace(/\/+$/, '');
+  var m = s.split('/');
+  if (m.length < 2 || !m[0] || !m[1]) return null;
+  return { owner: m[0], repo: m[1] };
+}
+
+/* ---------- base64：中文字符串不能直接 btoa ---------- */
+function b64enc(str){
+  var bytes = new TextEncoder().encode(str);
+  var bin = '';
+  var CH = 0x8000;
+  for (var i = 0; i < bytes.length; i += CH) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+  }
+  return btoa(bin);
+}
+function b64dec(s){
+  var bin = atob(String(s || '').replace(/\s/g, ''));
+  var bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+/* ---------- 一次 API 调用 ----------
+   统一把 GitHub 的错误体翻成一句人话，否则页面上只会看到 "409"。 */
+function ghApi(path, opt){
+  opt = opt || {};
+  var c = ghCfg();
+  var headers = {
+    'Authorization': 'Bearer ' + c.token,
+    'Accept': 'application/vnd.github+json'
+  };
+  if (opt.body) headers['Content-Type'] = 'application/json';
+
+  return fetch('https://api.github.com' + path, {
+    method: opt.method || 'GET',
+    headers: headers,
+    body: opt.body ? JSON.stringify(opt.body) : undefined,
+    cache: 'no-store'
+  }).then(function(res){
+    if (res.status === 404) return { missing: true };
+    if (res.ok) return res.json().then(function(j){ return { json: j }; });
+
+    return res.text().then(function(t){
+      var msg = '';
+      try { msg = JSON.parse(t).message || ''; } catch(e){ msg = String(t).slice(0, 100); }
+      var err = new Error('GitHub ' + res.status + (msg ? '：' + msg : ''));
+      err.status = res.status;
+      throw err;
+    });
+  });
+}
+
+function ghFilePath(){
+  var c = ghCfg();
+  return (c.path || 'workbench-sync.json').replace(/^\/+/, '');
+}
+function ghBranch(){
+  return ghCfg().branch || 'main';
+}
+
+/* 读远端。没有文件返回 null（第一次用，不是错）。 */
+async function ghPull(){
+  var c = ghCfg();
+  var r = await ghApi('/repos/' + c.owner + '/' + c.repo + '/contents/'
+    + ghFilePath().split('/').map(encodeURIComponent).join('/')
+    + '?ref=' + encodeURIComponent(ghBranch()));
+
+  if (r.missing) return null;
+  var txt = b64dec(r.json.content || '');
+  if (!txt.trim()) return null;
+  var data = JSON.parse(txt);
+  data.__sha = r.json.sha;
+  return data;
+}
+
+/* 写远端。sha 是乐观锁：不是最新版 GitHub 直接拒，避免悄悄覆盖另一台设备的改动。 */
+async function ghPut(sha){
+  var c = ghCfg();
+  var payload = {
+    v: 2,
+    devId: S.devId,
+    savedAt: Date.now(),
+    todos: S.todos,
+    inbox: S.inbox
+  };
+  var text = JSON.stringify(payload, null, 1);
+  /* Contents API 的硬上限。超了不会有半个文件，是整次拒绝，所以提前说清楚。 */
+  if (text.length > 700 * 1024) {
+    throw new Error('数据已经 ' + Math.round(text.length / 1024) + 'KB，超过这条通道的安全线（700KB）');
+  }
+
+  var body = {
+    message: 'sync ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' · ' + S.devId.slice(-4),
+    content: b64enc(text),
+    branch: ghBranch()
+  };
+  if (sha) body.sha = sha;
+
+  var r = await ghApi('/repos/' + c.owner + '/' + c.repo + '/contents/'
+    + ghFilePath().split('/').map(encodeURIComponent).join('/'),
+    { method: 'PUT', body: body });
+
+  return r.json && r.json.content ? r.json.content.sha : null;
+}
+
+/* 推的时候撞了车（另一台设备刚写完）：重拉、合并、再推一次。
+   不重试的话，那一次冲突就等于「我这台的改动丢了」。 */
+async function ghPutWithRetry(sha){
+  try {
+    return await ghPut(sha);
+  } catch(e){
+    if (e.status !== 409 && e.status !== 422) throw e;
+    var cur = await ghPull();
+    if (cur) mergeInto(cur);
+    save();
+    return await ghPut(cur ? cur.__sha : null);
+  }
+}
+
+/* mode: 'both' | 'up' | 'down'，跟文件通道同一套语义 */
+async function ghSync(mode, opt){
+  opt = opt || {};
+  if (GH.busy) return;
+  if (!ghReady()) { toast('先把仓库和 token 填上'); return; }
+
+  GH.busy = true; GH.note = '';
+  render({});
+  try {
+    var st = null;
+
+    if (mode !== 'up') {
+      var remote = await ghPull();
+      if (remote) {
+        st = mergeInto(remote);
+      } else if (mode === 'down') {
+        GH.note = '仓库里还没有这个文件，这台设备可能是第一个';
+      }
+    }
+
+    if (mode !== 'down') {
+      /* 推之前先拿一次最新的 sha —— 拉取到现在可能已经过了几秒 */
+      var cur = await ghPull();
+      if (cur && mode === 'both') {
+        /* ghPull 已经合并过，这里只补一条：pull 之后别人又写的，也要并进来 */
+        st = st || { add:0, upd:0, tomb:0, same:0 };
+      }
+      await ghPutWithRetry(cur ? cur.__sha : null);
+      GH.at = Date.now();
+    }
+
+    sweep();
+    save();
+    GH.busy = false;
+    render({});
+
+    if (opt.silent) {
+      if (st && (st.add || st.upd || st.tomb)) {
+        toast('从 GitHub 合并了 ' + (st.add + st.upd) + ' 条');
+      }
+      return;
+    }
+    if (st && (st.add || st.upd || st.tomb)) {
+      toast('同步完成：新增 ' + st.add + ' · 更新 ' + st.upd
+        + (st.tomb ? ' · 删除 ' + st.tomb : '') + ' · 未变 ' + st.same);
+    } else if (st) {
+      toast('两边一致，没有要合的东西');
+    } else {
+      toast('已写入 GitHub');
+    }
+  } catch(e){
+    GH.busy = false;
+    GH.note = e.message || String(e);
+    render({});
+    toast('GitHub 同步失败：' + GH.note);
+  }
+}
+
+/* 启动时悄悄试一次。没网 / token 失效就安静退出，不弹东西打扰。 */
+async function ghAutocheck(){
+  if (!ghReady()) return;
+  try {
+    var remote = await ghPull();
+    if (!remote) return;
+    var emptyLocal = !S.todos.length && !S.inbox.length;
+    var st = mergeInto(remote);
+    if (emptyLocal || st.add || st.upd || st.tomb) {
+      save(); render({});
+      toast('从 GitHub 恢复了 ' + (st.add + st.upd) + ' 条' + (st.tomb ? '，删除 ' + st.tomb : ''));
+    }
+  } catch(e){ /* 静默 */ }
+}
+
+/* ---------- 同步页上的那张卡片 ----------
+   字段直接摊在页面上，不做「点编辑才显示」。这是个自用工具，
+   多一层折叠就多一次「我上次怎么配的来着」。 */
+function ghCard(){
+  var c = ghCfg();
+  var has = ghReady();
+
+  var h = '<div class="syc"><div class="hd"><span class="tt">GitHub 通道</span>'
+    + '<span class="st ' + (has ? 'on' : 'off') + '">' + (has ? '已配置' : '未配置') + '</span></div>'
+    + '<div class="page-s" style="margin:0 0 13px">手机、电脑都能用</div>';
+
+  h += '<div class="ghf">'
+    + '<label><span>仓库</span><input id="ghrepo" placeholder="用户名/仓库名" spellcheck="false" autocomplete="off" value="'
+    + esc(c.owner && c.repo ? c.owner + '/' + c.repo : '') + '"></label>'
+    + '<label><span>文件</span><input id="ghpath" placeholder="workbench-sync.json" spellcheck="false" autocomplete="off" value="'
+    + esc(c.path || '') + '"></label>'
+    + '<label><span>分支</span><input id="ghbr" placeholder="main" spellcheck="false" autocomplete="off" value="'
+    + esc(c.branch || '') + '"></label>'
+    + '<label><span>Token</span><input id="ghtok" type="password" placeholder="github_pat_…" spellcheck="false" autocomplete="off" value="'
+    + esc(c.token || '') + '"></label>'
+    + '</div>';
+
+  h += '<div class="btnrow">'
+    + '<button class="primary" id="ghsave">保存</button>'
+    + '<button id="ghsyn"' + (GH.busy || !has ? ' disabled' : '') + '>' + (GH.busy ? '同步中…' : '立即同步') + '</button>'
+    + '<button id="ghup"' + (GH.busy || !has ? ' disabled' : '') + '>只上传</button>'
+    + '<button id="ghdown"' + (GH.busy || !has ? ' disabled' : '') + '>只下载</button>'
+    + '</div>';
+
+  if (GH.at) {
+    h += '<div class="rw"><span class="k">上次同步</span><span class="v">' + fmt(GH.at) + '</span></div>';
+  }
+  if (GH.note) {
+    h += '<div class="rw"><span class="k">状态</span><span class="v"><span class="warn">' + esc(GH.note) + '</span></span></div>';
+  }
+
+  h += '<div class="hint">Token：Settings → Developer settings → <b>Fine-grained tokens</b>，'
+    + '只勾这一个仓库，权限给 <b>Contents: Read and write</b>。'
+    + '<br>public 仓库里这个 json 谁都能看，要私密就换私有仓库。</div></div>';
+
+  return h;
+}
+
+function bindGh(){
+  var save = document.getElementById('ghsave');
+  if (!save) return;
+
+  var readForm = function(){
+    var repoRaw = (document.getElementById('ghrepo').value || '').trim();
+    var sp = ghSplitRepo(repoRaw);
+    return {
+      owner: sp ? sp.owner : '',
+      repo: sp ? sp.repo : '',
+      path: (document.getElementById('ghpath').value || '').trim() || 'workbench-sync.json',
+      branch: (document.getElementById('ghbr').value || '').trim() || 'main',
+      token: (document.getElementById('ghtok').value || '').trim()
+    };
+  };
+
+  save.addEventListener('click', function(){
+    var cfg = readForm();
+    if (!cfg.owner || !cfg.repo) { toast('仓库要写成 用户名/仓库名'); return; }
+    if (!cfg.token) { toast('还没填 token'); return; }
+    ghSet(cfg);
+    toast('已保存，正在试连接…');
+    testGh();
+  });
+
+  var bS = document.getElementById('ghsyn');
+  if (bS) bS.addEventListener('click', function(){ ghSync('both'); });
+  var bU = document.getElementById('ghup');
+  if (bU) bU.addEventListener('click', function(){ ghSync('up'); });
+  var bD = document.getElementById('ghdown');
+  if (bD) bD.addEventListener('click', function(){ ghSync('down'); });
+}
+
+/* 测试连接：拉一次，能拉到 / 拉到空 都算通。
+   失败时把 GitHub 的原话贴出来——403 是权限不对，401 是 token 错，404 是仓库名写错了，
+   这三种在页面上长得完全不一样，含糊过去等于让人瞎试。 */
+async function testGh(){
+  if (!ghReady()) { toast('先把仓库和 token 填上'); return; }
+  try {
+    var remote = await ghPull();
+    if (!remote) {
+      GH.note = '';
+      toast('连得上，仓库里还没有这个文件（第一次保存时会创建）');
+    } else {
+      var n = (remote.todos || []).length + (remote.inbox || []).length;
+      GH.note = '';
+      toast('连得上：远端 ' + n + ' 条记录');
+    }
+  } catch(e){
+    GH.note = e.message || String(e);
+    toast('连不上：' + GH.note);
+  }
+  render({});
 }
 
 /* ================= ui.js ================= */
@@ -1452,25 +1793,31 @@ function submit(){
    但它的**产出**可以喂进来——这是「在别处写、在这里变成结构」唯一能真做到的形态。
 
    顺手吃掉常见的前缀：`- ` `* ` `1. ` `[ ] ` `[x] `，留着它们当任务名很难看。 */
-function pasteLines(text, quadKey){
-  var lines = text.split(/\r?\n/).map(function(line){
+/* 把一段多行文本洗干净：拆行、去掉列表前缀、丢空行。
+   `- 买牛奶` `* 买牛奶` `1. 买牛奶` `[ ] 买牛奶` 在这个输入框里都只是「买牛奶」。 */
+function cleanLines(text){
+  return String(text || '').split(/\r?\n/).map(function(line){
     return line
       .replace(/^\s*[-*+•]\s+/, '')
       .replace(/^\s*\d+[.)]\s+/, '')
       .replace(/^\s*\[[ xX]?\]\s*/, '')
       .trim();
   }).filter(function(x){ return !!x; });
+}
 
-  if (lines.length < 2) return 0;
-
+/* opt.quad 指定格子（为空则按 opt.inbox 决定去收集箱还是普通待办） */
+function addMany(lines, opt){
+  opt = opt || {};
+  var q = opt.quad && QUAD_BY[opt.quad] ? QUAD_BY[opt.quad] : null;
   var now = Date.now();
-  var q = quadKey ? QUAD_BY[quadKey] : null;
   var n = 0;
+
   lines.forEach(function(t){
     var star = false;
     if (/^[!！]/.test(t)) { star = true; t = t.replace(/^[!！]\s*/, ''); }
     if (!t) return;
-    if (S.view === 'inbox' && !q) {
+
+    if (!q && opt.inbox) {
       S.inbox.push({id:uid(), text:t, created:now, up:now, del:0});
     } else {
       S.todos.push({id:uid(), text:t, done:false, doneAt:0, star:star,
@@ -1478,8 +1825,44 @@ function pasteLines(text, quadKey){
     }
     n++;
   });
-  save();
+  if (n) save();
   return n;
+}
+
+/* 粘贴多行：至少两行才拦，单行留给浏览器默认行为 */
+function pasteLines(text, quadKey){
+  var lines = cleanLines(text);
+  if (lines.length < 2) return 0;
+  return addMany(lines, { quad: quadKey, inbox: !quadKey && S.view === 'inbox' });
+}
+
+/* ---------- URL 入口：?add=… ----------
+   这是「接别处的东西进来」最通用的一刀：
+     iOS 快捷指令分享任何文本 → 打开这个链接 → 直接进收集箱
+     安卓任何 App 「分享 → 复制」再用桌面快捷方式打开同样有效
+     桌面浏览器可以用书签小工具拼这个 URL
+   带上 &to=do|plan|deleg|drop 就直接落进那一格。
+   收完立刻把 query 擦掉，否则刷新一次就重复入库一次。 */
+function catchUrlAdd(){
+  try {
+    var p = new URLSearchParams(location.search);
+    var txt = p.get('add') || p.get('t') || p.get('text') || '';
+    if (!txt) return;
+
+    var to = (p.get('to') || '').trim();
+    var lines = cleanLines(txt);
+    /* 没指定格子就进收集箱 —— 这是「收集」这个词的字面意思，
+       先收下，回头再决定放哪一格。 */
+    var n = addMany(lines, { quad: to, inbox: !to });
+
+    /* 不管有没有加成功，query 都得清掉 */
+    history.replaceState(null, '', location.pathname + location.hash);
+
+    if (!n) { toast('链接里没有可用的内容'); return; }
+    if (!to && S.view !== 'inbox') { S.view = 'inbox'; save(); }
+    render({top:true});
+    toast('收到 ' + n + ' 条');
+  } catch(e){}
 }
 
 /* 给一个输入框挂上「多行粘贴自动拆条」。quadKey 为空表示这是主输入框。 */
@@ -1733,8 +2116,13 @@ setInterval(function(){
 /* 首屏无内容时给一条提示，避免"空白不知道干什么" */
 render();
 
+/* 从分享链接进来（?add=…）：先入库，再决定看哪一屏 */
+catchUrlAdd();
+
 /* 上一次连着同步文件夹的话，悄悄看一眼远端有没有更新 */
 setTimeout(autocheck, 900);
+/* GitHub 通道稍晚一点试，别跟文件夹通道抢首次请求 */
+setTimeout(ghAutocheck, 1700);
 
 /* 输入框首次自动聚焦（桌面） */
 if (window.innerWidth > 860 && S.view === 'today') {

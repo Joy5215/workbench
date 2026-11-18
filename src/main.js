@@ -19,8 +19,13 @@ setInterval(function(){
 /* 首屏无内容时给一条提示，避免"空白不知道干什么" */
 render();
 
+/* 从分享链接进来（?add=…）：先入库，再决定看哪一屏 */
+catchUrlAdd();
+
 /* 上一次连着同步文件夹的话，悄悄看一眼远端有没有更新 */
 setTimeout(autocheck, 900);
+/* GitHub 通道稍晚一点试，别跟文件夹通道抢首次请求 */
+setTimeout(ghAutocheck, 1700);
 
 /* 输入框首次自动聚焦（桌面） */
 if (window.innerWidth > 860 && S.view === 'today') {

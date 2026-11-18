@@ -26,6 +26,7 @@ ORDER = [
     "config.js",    # 视图清单、图标、四象限定义
     "store.js",     # localStorage 与探测
     "sync.js",      # 文件夹同步
+    "sync-gh.js",   # GitHub 通道（全平台，含手机）
     "ui.js",        # 通用组件
 ]
 VIEWS_FILES = [
