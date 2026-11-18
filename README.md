@@ -22,11 +22,14 @@ dist/我的工作台.html      ← 只有这一个文件是给用户用的
 │   ├── store.js              数据落地：localStorage 缓存 + 探测能不能存
 │   ├── sync.js               文件夹同步：句柄、写入、启动时对照远端、同步页按钮绑定
 │   ├── sync-gh.js            GitHub 通道：Contents API 读写、乐观锁、冲突重试
+│   ├── media.js              媒体识别：视频/图片/外站卡片（bilibili、YouTube、飞书、WPS）
+│   ├── vendor/               第三方库，构建时原样拼进来：marked(MIT) + DOMPurify(Apache-2.0)
 │   ├── ui.js                 通用组件：标题、输入行、空状态、统计卡、分段控件
 │   ├── views/                一个功能一个文件，加功能只动这里
 │   │   ├── today.js            今日
 │   │   ├── quad.js             四象限
 │   │   ├── inbox.js            收件箱
+│   │   ├── notes.js            笔记：视频/文档来源 + Markdown + mermaid
 │   │   ├── review.js           回顾
 │   │   └── soon.js             未实现视图的兜底页
 │   ├── render.js             路由与装配：选视图、算角标、绑事件
@@ -137,6 +140,22 @@ access-control-allow-headers: Authorization, Content-Type, If-Match, ...
 **冲突**：PUT 带 `sha` 当乐观锁。撞车了（409/422）就重拉、合并、再推一次——不重试的话那一次冲突等于「我这台的改动丢了」。
 
 **token 只存本机**，`myworkbench.gh` 这个 key，不进 `workbench-sync.json`。用 fine-grained token，只授权一个仓库的 Contents 读写。
+
+## 笔记：视频、思维导图、Markdown
+
+三种能力都不是飞书或 WPS 的专利，网页里都能做：
+
+| 想要 | 怎么做 | 实测 |
+|---|---|---|
+| 嵌视频 | B 站 `player.bilibili.com`、YouTube `/embed/` 走 iframe | B 站页面**没有** `x-frame-options`，能嵌；YouTube 在这台机器上超时，未验证 |
+| 思维导图 | ```mermaid 代码块 → `mermaid.ink/img/<base64>` 出的 PNG | 返回 `image/png` 200，中文正常 |
+| 读 Markdown | 内嵌 marked(35KB) + DOMPurify(21KB) | 标题/列表/表格/代码块都过 |
+
+**为什么飞书和 WPS 只给一张卡片**：`docs.feishu.cn` 返回 `x-frame-options: DENY`，飞书官方 FAQ 还自认 iframe 内 cookie 不可用、扫码都登不上。WPS 同理由（靠登录态）。这两家点开去那边看，不硬塞。
+
+**为什么不留 mermaid.js 在本地**：3.5MB，为了画几张图不值得。换成 GET 图床，代价是断网看不到图——所以图下面一直保留源码，图挂了也读得到。`onerror` 会把图换成源码。
+
+**正文为什么要净化**：笔记会进同步文件，那个文件另一台设备、共享仓库、手改都能写进来。不净化等于给 XSS 开个口。`tests/gh.test.cjs` 里专门写了一条带 `<script>` 和 `onerror` 的笔记，断言它进不了 DOM。
 
 ## 从外面收件
 

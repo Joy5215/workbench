@@ -4,7 +4,7 @@
 
 /* 合并的入口：把 S 里的两个数组交给纯函数，返回统计。 */
 function mergeInto(remote){
-  return mergeRecords(S.todos, S.inbox, remote);
+  return mergeRecords(S.todos, S.inbox, remote, S.notes);
 }
 
 /* ==========================================================
@@ -106,7 +106,8 @@ async function pushRemote(){
     devId: S.devId,
     savedAt: Date.now(),
     todos: S.todos,
-    inbox: S.inbox
+    inbox: S.inbox,
+    notes: S.notes || []
   };
   await w.write(JSON.stringify(payload, null, 1));
   await w.close();
@@ -134,10 +135,11 @@ async function fetchRemote(){
 /* 墓碑留 30 天足够让所有设备都收到，之后就清掉，否则文件只增不减 */
 function sweep(){
   var cut = Date.now() - 30 * 86400000;
-  var n0 = S.todos.length + S.inbox.length;
+  var n0 = S.todos.length + S.inbox.length + (S.notes || []).length;
   S.todos = S.todos.filter(function(x){ return !(x.del && (x.up || 0) < cut); });
   S.inbox = S.inbox.filter(function(x){ return !(x.del && (x.up || 0) < cut); });
-  return n0 - (S.todos.length + S.inbox.length);
+  S.notes = (S.notes || []).filter(function(x){ return !(x.del && (x.up || 0) < cut); });
+  return n0 - (S.todos.length + S.inbox.length + (S.notes || []).length);
 }
 
 async function syncNow(mode, opt){
@@ -204,7 +206,7 @@ async function autocheck(){
     /* 文件夹里连 json 都没有 —— 这台设备是第一次连，把现在的数据种进去，
        否则网盘里永远只有一个 html，换台电脑打开就是空的。 */
     if (!remote) {
-      var n0 = S.todos.length + S.inbox.length;
+      var n0 = S.todos.length + S.inbox.length + (S.notes || []).length;
       if (n0) {
         await pushRemote();
         toast('已把这台设备的 ' + n0 + ' 条记录写进文件夹');

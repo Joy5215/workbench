@@ -26,12 +26,17 @@ function load(){
   var d = null;
   try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ d = null; }
   if (!d || !Array.isArray(d.todos)) {
-    d = { todos:[], inbox:[], view:'quad', mini:false, lastSave:0 };
+    d = { todos:[], inbox:[], notes:[], view:'quad', mini:false, lastSave:0 };
   }
   if (!Array.isArray(d.inbox)) d.inbox = [];
+  if (!d.todos) d.todos = [];
+  if (!d.inbox) d.inbox = [];
+  if (!d.notes) d.notes = [];
   if (!d.view) d.view = 'quad';
   /* 界面态：+ 按钮选中了哪一格、底部浮层开着什么。不进同步文件，只存本机。 */
   if (d.addQuad === undefined) d.addQuad = '';
+  /* 主输入框可以拉高（粘贴长内容时）。高度是个数，不是 px，换设备也不会变形。 */
+  if (d.rows === undefined) d.rows = 1;
   d.picker = false;
   d.sheet = '';
 

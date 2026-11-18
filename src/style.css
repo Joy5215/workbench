@@ -359,3 +359,89 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
 .ghf input:focus{border-color:#adc3b6;outline:none;background:#fff}
 .syc code{font-family:ui-monospace,Menlo,monospace;font-size:11px;background:#f1efe8;
  padding:1px 5px;border-radius:4px;color:#5c5f56}
+
+/* ---------- 输入区改成 textarea ---------- */
+.entry{display:flex;gap:8px;align-items:flex-end}
+.entry textarea{flex:1 1 auto;min-width:0;resize:none;overflow-y:auto;
+ font-family:inherit;font-size:13.5px;line-height:1.5;padding:9px 11px;
+ border:1px solid #e2dfd5;border-radius:8px;background:#fff;color:#33352f;
+ min-height:38px;max-height:160px}
+.entry textarea:focus{border-color:#adc3b6;outline:none}
+.entry textarea::placeholder{color:#b8b5ab}
+.entry .b{flex:none;height:38px;padding:0 15px}
+
+/* ---------- 媒体块 ---------- */
+.md1{margin:0 0 10px}
+.md-fr{position:relative;width:100%;padding-top:56.25%;background:#0f1110;border-radius:10px;overflow:hidden}
+.md-fr iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.md-vid{width:100%;border-radius:10px;background:#0f1110;max-height:70vh}
+.md-img{display:block}
+.md-img img{width:100%;border-radius:10px;display:block}
+.md-go{display:flex;align-items:center;gap:9px;padding:11px 13px;border:1px solid #eae7dd;
+ border-radius:10px;background:#fbfaf7;text-decoration:none}
+.md-go:hover{background:#f6f4ee}
+.md-go-t{font-size:12.5px;font-weight:650;color:#3d3f36;flex:none}
+.md-go-u{flex:1;min-width:0;font-size:11.5px;color:#a8a59b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.md-go-a{flex:none;font-size:12px;color:#2f6b4f;font-weight:650}
+.md1-f{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+.md1-k{font-size:10.5px;color:#a8a59b;letter-spacing:.03em;flex:none}
+.md1-t{font-size:12px;color:#5c5f56;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- 笔记页 ---------- */
+.nt{background:#fff;border:1px solid #eae7dd;border-radius:12px;padding:14px 15px 10px;margin-top:11px}
+.nt-body{margin-top:4px}
+.nt-body.md{font-size:13.5px;line-height:1.72;color:#33352f}
+.nt-body.md h1,.nt-body.md h2,.nt-body.md h3{font-size:14.5px;font-weight:650;margin:14px 0 6px;color:#2b2d29}
+.nt-body.md h1{font-size:16px}
+.nt-body.md p{margin:0 0 9px}
+.nt-body.md ul,.nt-body.md ol{margin:0 0 9px;padding-left:20px}
+.nt-body.md li{margin:2px 0}
+.nt-body.md code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;
+ background:#f4f2eb;padding:1px 5px;border-radius:4px}
+.nt-body.md pre{background:#f7f6f1;border:1px solid #eae7dd;border-radius:8px;
+ padding:10px 12px;overflow-x:auto;margin:0 0 10px}
+.nt-body.md pre code{background:none;padding:0;font-size:11.5px;line-height:1.6}
+.nt-body.md a{color:#2f6b4f;text-decoration:underline;text-underline-offset:2px}
+.nt-body.md blockquote{margin:0 0 9px;padding:2px 0 2px 12px;border-left:2px solid #dcd8cb;color:#6b6d63}
+.nt-body.md table{border-collapse:collapse;width:100%;margin:0 0 10px;font-size:12.5px}
+.nt-body.md th,.nt-body.md td{border:1px solid #eae7dd;padding:5px 8px;text-align:left}
+.nt-body.md th{background:#faf9f5;font-weight:650}
+.nt-body.md img{max-width:100%;border-radius:8px}
+.nt-f{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:7px;border-top:1px solid #f4f2ec}
+.nt-t{flex:1;font-size:10.5px;color:#b8b5ab}
+.nt-b{font-size:11px;color:#8a877c;padding:3px 8px;border-radius:5px}
+.nt-b:hover{background:#f2f0e9;color:#33352f}
+.nt-x:hover{color:#b4574a;background:#f8eeed}
+
+/* mermaid 图：点一下露出源码 */
+.mmm{margin:0 0 12px;cursor:pointer}
+.mmm img{width:100%;max-width:420px;display:block;margin:0 auto;border-radius:8px;background:#fff}
+.mmm-c{display:none;margin-top:7px}
+.mmm.open .mmm-c{display:block}
+.mmm-c pre{background:#f7f6f1;border:1px solid #eae7dd;border-radius:7px;padding:8px 10px;
+ font-size:11px;overflow-x:auto;margin:0}
+
+/* 编辑区 */
+.nted{background:#fff;border:1px solid #eae7dd;border-radius:12px;padding:14px 15px;margin-top:12px}
+.nted-r{display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:start;margin-bottom:10px}
+.nted-r span{font-size:12px;color:#8a877c;padding-top:9px}
+.nted-r input,.nted-r textarea{width:100%;min-width:0;font-family:inherit;font-size:13px;
+ padding:8px 10px;border:1px solid #e2dfd5;border-radius:7px;background:#fdfdfb;color:#33352f;
+ line-height:1.6;resize:vertical}
+.nted-r input:focus,.nted-r textarea:focus{border-color:#adc3b6;outline:none;background:#fff}
+.nempty{text-align:center;color:#bcb9ae;font-size:12.5px;padding:40px 0}
+
+@media(max-width:860px){
+  .entry textarea{font-size:13px}
+  .nt{padding:12px 13px 8px;border-radius:10px}
+  .nt-body.md{font-size:13px}
+  .nted{padding:12px 13px}
+  .nted-r{grid-template-columns:1fr;gap:4px}
+  .nted-r span{padding-top:0}
+}
+
+/* 笔记卡片标题与 mermaid 兜底 */
+.nt-h{font-size:14px;font-weight:650;color:#2b2d29;margin:0 0 9px;line-height:1.45}
+.mmm-e{display:none;font-size:11.5px;color:#b4574a;text-align:center;padding:16px 0}
+.mmm.bad img{display:none}
+.mmm.bad .mmm-e{display:block}

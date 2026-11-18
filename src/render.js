@@ -40,11 +40,24 @@ function bindView(){
   var inp = document.getElementById('inp');
   if (inp) {
     inp.addEventListener('keydown', function(e){
-      if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
-        e.preventDefault();
-        submit();
-      }
+      /* 输入法组字时按回车是在选字，不能当成提交 */
+      var composing = e.isComposing || e.keyCode === 229;
+      if (e.key !== 'Enter' || composing) return;
+      /* Shift+Enter 换行：写长一点的笔记或粘贴后手动整理时要用 */
+      if (e.shiftKey) return;
+      e.preventDefault();
+      submit();
     });
+
+    /* 框自己长高：内容多了就多显示几行，最多 8 行，再多就滚动 */
+    var autosize = function(){
+      inp.style.height = 'auto';
+      var h = Math.min(inp.scrollHeight, 160);
+      inp.style.height = h + 'px';
+    };
+    inp.addEventListener('input', autosize);
+    setTimeout(autosize, 0);
+
     var btn = document.getElementById('add');
     if (btn) btn.addEventListener('click', submit);
     bindPaste(inp, '');
@@ -67,6 +80,7 @@ function bindView(){
 
 
   bindSyncView();
+  if (S.view === 'notes') bindNotes();
 }
 
 function currentView(){

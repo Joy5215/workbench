@@ -27,6 +27,7 @@ ORDER = [
     "store.js",     # localStorage 与探测
     "sync.js",      # 文件夹同步
     "sync-gh.js",   # GitHub 通道（全平台，含手机）
+    "media.js",     # 媒体识别：视频/图片/外站卡片
     "ui.js",        # 通用组件
 ]
 VIEWS_FILES = [
@@ -34,12 +35,19 @@ VIEWS_FILES = [
     "views/quad.js",
     "views/inbox.js",
     "views/review.js",
+    "views/notes.js",  # 笔记：视频/文档来源 + Markdown + mermaid
     "views/soon.js",   # 给未实现的视图兜底（不注册到 VIEW_FN）
 ]
 TAIL = [
     "render.js",    # 路由与装配
     "actions.js",   # 写操作
     "main.js",      # 启动
+]
+
+
+VENDOR_FILES = [
+    "vendor/marked.min.js",    # Markdown 解析（MIT）
+    "vendor/purify.min.js",    # HTML 净化（Apache-2.0），防笔记里的 script 执行
 ]
 
 
@@ -52,6 +60,9 @@ def build():
     tpl = read("index.html")
     css = read("style.css")
     parts = []
+    # 第三方库用裸字符串，不加分隔注释（它们自己就有 license 头）
+    for name in VENDOR_FILES:
+        parts.append(read(name))
     for name in ORDER + VIEWS_FILES + TAIL:
         parts.append("/* ================= %s ================= */\n%s" % (name, read(name)))
     js = "\n\n".join(parts)

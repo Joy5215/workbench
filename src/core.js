@@ -27,14 +27,19 @@ function newer(a, b){
 /* 合并：同 id 比 up，大的赢；本地没有的直接收下。墓碑也是记录，一样参与比较。
    纯函数：只改传入的两个数组，不碰全局 S —— 这样能离开浏览器跑用例。
    注意 lmap 只在开头建一次，不随 push 更新，这是原实现的行为，别改。 */
-function mergeRecords(todos, inbox, remote){
+/* 第三个参数 notes 是可选的。不传就照老样子只合 todos + inbox，
+   tests/core.test.cjs 里那些用例因此不用改，也不会因为多了一个数组而失败。 */
+function mergeRecords(todos, inbox, remote, notes){
   var lmap = {};
   todos.forEach(function(x){ lmap[x.id] = x; });
   inbox.forEach(function(x){ lmap[x.id] = x; });
+  if (notes) notes.forEach(function(x){ lmap[x.id] = x; });
 
   var st = { add:0, upd:0, same:0, tomb:0 };
-  [{ arr: remote.todos || [], to: todos },
-   { arr: remote.inbox || [], to: inbox }].forEach(function(g){
+  var groups = [{ arr: remote.todos || [], to: todos },
+                { arr: remote.inbox || [], to: inbox }];
+  if (notes) groups.push({ arr: remote.notes || [], to: notes });
+  groups.forEach(function(g){
     g.arr.forEach(function(r){
       if (!r || !r.id) return;
       var l = lmap[r.id];

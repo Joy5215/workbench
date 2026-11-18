@@ -132,6 +132,49 @@ function ok(name, cond, extra) {
      浏览器会为这种响应打一条 control 台的「Failed to load resource」，
      那不是我们的 bug，别让它把真的错误盖过去。 */
   const real = errors.filter((e) => !/Failed to load resource/.test(e) && !/401/.test(e));
+  console.log('\n笔记：Markdown 与净化');
+
+  /* 纯函数（detectMedia / mediaOfText）在 IIFE 里，evaluate 拿不到——
+     那些用例放在 tests/media.test.cjs 里离线跑。
+     这里只验「渲染出来的东西」，那是用户真正看到的部分。 */
+
+  /* 笔记内容会进同步文件，那个文件别人能写，所以净化这一步不能省。
+     走界面验：写一条带恶意标签的笔记，看渲染出来的 DOM 里还有没有它。 */
+  await page.evaluate(() => { document.querySelector('[data-view=notes]').click(); });
+  await wait(400);
+  await page.evaluate(() => {
+    document.getElementById('ntnew').click();
+  });
+  await wait(400);
+  await page.evaluate(() => {
+    document.getElementById('ntbody').value =
+      '## 标题\n- 一条\n\n<script>window.__X=1<\/script>\n\n<img src=x onerror="window.__Y=1">';
+    document.getElementById('ntsave').click();
+  });
+  await wait(700);
+
+  const md = await page.evaluate(() => {
+    const box = document.querySelector('.nt-body.md');
+    return {
+      h2: !!(box && box.querySelector('h2')),
+      li: !!(box && box.querySelector('li')),
+      script: !!(box && box.querySelector('script')),
+      img: !!(box && box.querySelector('img[onerror]')),
+      executed: window.__X === 1 || window.__Y === 1,
+    };
+  });
+  ok('Markdown 标题与列表渲染出来', md.h2 && md.li, md);
+  ok('正文里的 script 没有进入 DOM', md.script === false, md);
+  ok('onerror 这类内联事件被拿掉', md.img === false, md);
+  ok('净化后脚本没有执行', md.executed === false, md);
+
+  console.log('\n笔记页');
+
+  await page.evaluate(() => { document.querySelector('[data-view=notes]').click(); });
+  await wait(400);
+  ok('笔记页能打开', await page.evaluate(() => !!document.getElementById('ntnew')));
+  ok('有「读 md」入口', await page.evaluate(() => !!document.getElementById('ntfile')));
+
   ok('全程无意外 JS 错误', real.length === 0, real);
 
   await browser.close();

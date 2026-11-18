@@ -117,7 +117,8 @@ async function ghPut(sha){
     devId: S.devId,
     savedAt: Date.now(),
     todos: S.todos,
-    inbox: S.inbox
+    inbox: S.inbox,
+    notes: S.notes || []
   };
   var text = JSON.stringify(payload, null, 1);
   /* Contents API 的硬上限。超了不会有半个文件，是整次拒绝，所以提前说清楚。 */

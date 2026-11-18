@@ -11,9 +11,11 @@ hr(){ printf '%s\n' "----------------------------------------"; }
 hr; echo "1/5  构建一致性（dist 是否等于 src 拼出来的）"
 if python3 build.py --check; then echo "  ✅ 通过"; else echo "  ❌ dist 与 src 不一致 → python3 build.py"; FAIL=1; fi
 
-hr; echo "2/5  core.js 单元测试"
+hr; echo "2/5  纯函数单元测试（core / media）"
 if node tests/core.test.cjs | tail -2; then :; fi
-node tests/core.test.cjs >/dev/null 2>&1 || { echo "  ❌ 有失败用例"; FAIL=1; }
+node tests/core.test.cjs >/dev/null 2>&1 || { echo "  ❌ core 有失败用例"; FAIL=1; }
+if node tests/media.test.cjs | tail -2; then :; fi
+node tests/media.test.cjs >/dev/null 2>&1 || { echo "  ❌ media 有失败用例"; FAIL=1; }
 
 hr; echo "3/5  行为等价（基线 vs 构建，真浏览器跑同一组操作）"
 ( cd "$PARENT" && python3 -m http.server "$PORT" --bind 127.0.0.1 >/dev/null 2>&1 ) &

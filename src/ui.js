@@ -8,10 +8,14 @@ function uiHead(title, sub){
     + '<div class="page-s">' + sub + '</div>';
 }
 
-/* 输入行。id 固定为 inp / add，actions.js 靠这两个 id 取值。 */
+/* 输入区。id 固定为 inp / add，actions.js 靠这两个 id 取值。
+   用 textarea 而不是 input：input 会把多行粘贴拍成单行（实测「第一行\n第二行」→「第一行 第二行」）。
+   这里回车是添加、Shift+回车是换行——跟滴答、Things 一样，不跟记事本一样。 */
 function uiEntry(placeholder, btnText){
-  return '<div class="entry"><input id="inp" type="text" placeholder="' + esc(placeholder) + '"'
-    + ' autocomplete="off"><button class="b" id="add">' + esc(btnText || '添加') + '</button></div>';
+  var rows = Math.max(1, Math.min(12, (S && S.rows) || 1));
+  return '<div class="entry"><textarea id="inp" rows="' + rows + '" placeholder="' + esc(placeholder) + '"'
+    + ' autocomplete="off" spellcheck="false"></textarea>'
+    + '<button class="b" id="add">' + esc(btnText || '添加') + '</button></div>';
 }
 
 /* 空状态：一个图标 + 两句解释 */

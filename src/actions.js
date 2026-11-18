@@ -8,6 +8,15 @@ function submit(){
   var v = inp.value.trim();
   if (!v) return;
 
+  /* 整条就是一个视频链接 → 存成笔记。这是「想收藏这个视频」的场景，
+     硬变成一条叫「https://…」的任务，第二天自己都不知道那行是什么。 */
+  var media = mediaOfText(v);
+  if (media) {
+    inp.value = '';
+    submitMedia(v);
+    return;
+  }
+
   var now = Date.now();
   if (S.view === 'inbox') {
     S.inbox.push({id:uid(), text:v, created:now, up:now, del:0});
@@ -18,6 +27,8 @@ function submit(){
     S.todos.push({id:uid(), text:v, done:false, doneAt:0, star:star,
                   urg:0, imp:0, created:now, up:now, del:0});
   }
+  /* 交完把输入区收回去，否则上次拉高过的框一直占着屏 */
+  S.rows = 1;
   save();
   render({focus:true, top:true});
 }
@@ -71,6 +82,17 @@ function pasteLines(text, quadKey){
   return addMany(lines, { quad: quadKey, inbox: !quadKey && S.view === 'inbox' });
 }
 
+/* 这段粘贴到底是「一串待办」还是「一段文字」？
+   两条判据：行数 >= 2，且每行都短、不带句号/逗号收尾的长句。
+   判错的代价不对称——一串任务被当成一段，用户还得再删一次；
+   一段文字被拆成十几条，那是灾难。所以宁可保守：拿不准就当一段。 */
+function looksLikeList(lines){
+  if (lines.length < 2) return false;
+  return lines.every(function(x){
+    return x.length <= 30 && !/[。！？；]$/.test(x);
+  });
+}
+
 /* ---------- URL 入口：?add=… ----------
    这是「接别处的东西进来」最通用的一刀：
      iOS 快捷指令分享任何文本 → 打开这个链接 → 直接进收集箱
@@ -100,7 +122,9 @@ function catchUrlAdd(){
   } catch(e){}
 }
 
-/* 给一个输入框挂上「多行粘贴自动拆条」。quadKey 为空表示这是主输入框。 */
+/* 给一个输入框挂上两条粘贴规则。
+   quadKey 为空表示这是主输入框——主输入框还能接「一段文字」存成笔记。
+   格内输入框只收任务，所以永远是拆条。 */
 function bindPaste(el, quadKey){
   el.addEventListener('paste', function(e){
     var cd = e.clipboardData;
@@ -113,22 +137,61 @@ function bindPaste(el, quadKey){
     }
 
     var text = cd.getData('text/plain');
-    /* 单行交给浏览器默认行为，不要拦——拦了反而粘贴不了长句 */
-    if (!text || text.indexOf('\n') < 0) return;
 
-    var n = pasteLines(text, quadKey);
-    if (!n) return;
-    e.preventDefault();
-    render({top:true});
-    setTimeout(function(){
-      var again = quadKey ? document.querySelector('[data-qin="' + quadKey + '"]')
-                          : document.getElementById('inp');
-      if (again) { again.value = ''; again.focus(); }
-    }, 0);
-    toast('粘进来 ' + n + ' 条');
+    /* 一、整段是一个链接 → 存成媒体。视频放得进来、飞书 WPS 给卡片。
+          这条必须在「多行拆条」之前判，否则一个带标题的链接会被拆散。 */
+    if (text && text.indexOf('\n') < 0) {
+      var media = quadKey ? null : mediaOfText(text);
+      if (media) { e.preventDefault(); submitMedia(text); return; }
+    }
+
+    /* 二、多行文本。主输入框要先问一句：这是任务清单，还是一段话？ */
+    if (text && text.indexOf('\n') >= 0) {
+      var lines = cleanLines(text);
+      if (quadKey || looksLikeList(lines)) {
+        var n = pasteLines(text, quadKey);
+        if (n) {
+          e.preventDefault();
+          render({top:true});
+          refocus(quadKey);
+          toast('粘进来 ' + n + ' 条');
+        }
+        return;
+      }
+      /* 不像清单：留给浏览器默认行为，文字原样留在框里，Shift+回车继续写 */
+      setTimeout(function(){
+        var box = document.getElementById('inp');
+        if (box) box.dispatchEvent(new Event('input'));
+      }, 0);
+      return;
+    }
+
+    /* 一行的普通文字，交给浏览器 */
   });
 }
 
+function refocus(quadKey){
+  var again = quadKey ? document.querySelector('[data-qin="' + quadKey + '"]')
+                      : document.getElementById('inp');
+  if (again) { again.value = ''; again.focus(); }
+}
+
+/* 存一段笔记。带链接的整段文本走这里，正文可选。 */
+function submitMedia(text){
+  var src = mediaOfText(text);
+  if (!src) { toast('这个链接认不出来'); return; }
+  var now = Date.now();
+  S.notes.push({
+    id: uid(), text: '', src: src, body: '',
+    created: now, up: now, del: 0
+  });
+  S.rows = 1;
+  S.view = 'notes';
+  save(); render({top:true, focus:true});
+  toast('存成笔记：' + src.label);
+}
+
+/* 主输入框提交：一行是任务，多行不像清单时也可以当一条任务（比如带标点的长句） */
 /* 象限内联添加：输入框在该格里，提交时直接带上这一格的 urg/imp。
    注意不能复用 submit()——那个靠 S.view 判断往 todos 还是 inbox 里塞，
    在四象限页会把事塞进收件箱。这里必须自己写。 */
