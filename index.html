@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" translate="no">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f4f2ec">
 <link rel="icon" href="data:,">
+<meta name="google" content="notranslate">
 <title>我的工作台</title>
 <style>
 /* 样式层。构建时原样内联进 <style>，运行时不发额外请求。 */
@@ -77,12 +78,12 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
 .entry{display:flex;align-items:center;gap:8px;margin:20px 0 4px;
  border:1px solid #e2dfd5;border-radius:8px;background:#fff;padding:0 5px 0 13px;transition:.15s}
 .entry:focus-within{border-color:#adc3b6;box-shadow:0 0 0 3px rgba(47,107,79,.07)}
-.entry input{flex:1;padding:11px 0;font-size:13.5px;min-width:0}
-.entry input::placeholder{color:#bcb9ae}
-.entry .b{flex:none;background:#2f6b4f;color:#fff;font-size:12px;font-weight:650;
+.entry>input{flex:1;padding:11px 0;font-size:13.5px;min-width:0}
+.entry>input::placeholder{color:#bcb9ae}
+.entry>.b{flex:none;background:#2f6b4f;color:#fff;font-size:12px;font-weight:650;
  padding:6px 14px;border-radius:6px;margin:5px 0;white-space:nowrap;transition:.12s}
-.entry .b:hover{background:#27583f}
-.entry .b:active{transform:translateY(1px)}
+.entry>.b:hover{background:#27583f}
+.entry>.b:active{transform:translateY(1px)}
 
 /* 列表 */
 .list{margin-top:6px}
@@ -208,6 +209,62 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
   .stats{grid-template-columns:1fr 1fr;gap:9px}
   .stat:nth-child(3){grid-column:1/-1}
   .act{opacity:1}
+}
+
+/* ---------- 四象限 ---------- */
+.tx .mk{display:inline-flex;gap:4px;margin-left:2px}
+.tx .mk .tag.imp{color:#7a6a2e;background:#f4eeda}
+.tx .mk .tag.urg{color:#9c4a3c;background:#f7e8e4}
+/* 「急 / 重」两个切换：今日页悬停才露（跟星的逻辑一致），四象限里常驻 */
+.act button[data-imp],.act button[data-urg]{font-size:10.5px;width:24px;height:24px;
+ font-weight:700;color:#c9c6bc;border-radius:5px;letter-spacing:-.02em;opacity:0;transition:.12s}
+.row:hover .act button[data-imp],.row:hover .act button[data-urg]{opacity:1}
+.act button[data-imp].on,.act button[data-urg].on{opacity:1}
+.act button[data-imp].on{color:#a8862c;background:#f6f0dc}
+.act button[data-urg].on{color:#b4574a;background:#f8eeea}
+@media(hover:none){
+  .act button[data-imp],.act button[data-urg]{opacity:1}
+}
+.qc .act button[data-imp],.qc .act button[data-urg]{opacity:1}
+
+.seg{display:inline-flex;gap:2px;padding:3px;background:#f2f0e9;border-radius:8px;margin:14px 0 2px}
+.seg .sg{font-size:12px;color:#7a7c72;padding:5px 12px;border-radius:6px;white-space:nowrap;transition:.12s}
+.seg .sg:hover{color:#3d3f36}
+.seg .sg.on{background:#fff;color:#2f6b4f;font-weight:650;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.seg .sg i{font-style:normal;font-size:10px;color:#b0ada2;margin-left:5px;font-variant-numeric:tabular-nums}
+.seg .sg.on i{color:#8fb3a3}
+
+.quad{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}
+.qc{background:#fbfaf7;border:1px solid #eae7dd;border-radius:11px;padding:13px 14px 10px;
+ display:flex;flex-direction:column;min-height:132px}
+.qc .qh{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.qc .qh .qi{width:16px;height:16px;color:#b8b5ab;flex:none;display:grid;place-items:center}
+.qc .qh .qi svg{width:14px;height:14px}
+.qc .qh .qt{font-size:12.5px;font-weight:650;color:#4a4c42;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qc .qh .qn{font-size:10.5px;color:#b8b5ab;font-variant-numeric:tabular-nums;flex:none}
+.qc .qs{font-size:10.5px;color:#bcb9ae;margin-bottom:8px}
+.qc.hot .qh .qi{color:#b4574a}
+.qc.warm .qh .qi{color:#a8862c}
+.qc .list{margin-top:0}
+.qc .row{padding:8px 0}
+.qc .row:first-child{padding-top:5px}
+.qc .tx .t{font-size:12.5px}
+.qc .meta{display:none}
+.qc .act{margin-left:auto}
+.qc .qempty{font-size:11px;color:#cfccc1;padding:10px 0 4px;text-align:center}
+.qc .entries{margin-top:auto;padding-top:6px}
+.qc .qadd{flex:none;padding:0 8px;font-size:13px;line-height:1;color:#c2bfb4;border-radius:5px}
+.qc .qadd:hover{color:#2f6b4f;background:#f4f7f4}
+.qc .qform{display:flex;gap:5px;margin-top:4px}
+/* flex-basis 必须是 auto：Chrome 对 <input> 的默认内在尺寸很小，
+   basis:0 时它先缩到 16px，然后因为内容宽度是 0 就不再长回去。 */
+.qc .qform input{flex:1 1 auto;min-width:0;font-size:12px;padding:5px 7px;border:1px solid #e2dfd5;
+ border-radius:6px;background:#fff}
+.qc .qform input:focus{border-color:#adc3b6}
+
+@media(max-width:860px){
+  .quad{grid-template-columns:1fr;gap:9px}
+  .qc{min-height:0}
 }
 </style>
 </head>
@@ -353,6 +410,59 @@ if (typeof module !== "undefined" && module.exports) {
                      esc: esc };
 }
 
+/* ================= config.js ================= */
+/* ---------- config.js ----------
+   配置层：视图清单、图标、枚举。只有数据，没有逻辑。
+   加一个视图/一个图标，只改这个文件；别的层不用知道。 */
+
+var IC = {
+  today:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3.3"/><path d="M8 1.3v1.5M8 13.2v1.5M1.3 8h1.5M13.2 8h1.5M3.3 3.3l1 1M11.7 11.7l1 1M12.7 3.3l-1 1M4.3 11.7l-1 1"/></svg>',
+  quad:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="2.2" y="2.2" width="11.6" height="11.6" rx="1.6"/><path d="M8 2.2v11.6M2.2 8h11.6"/></svg>',
+  inbox:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2 9.2V13h12V9.2"/><path d="M2 9.2l2-6h8l2 6"/><path d="M2 9.2h3.2l.9 1.6h3.8l.9-1.6H14"/></svg>',
+  folder:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M1.9 12.7V3.8h4.3l1.5 1.9h6.4v7z"/></svg>',
+  note:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3.3" y="2.2" width="9.4" height="11.6" rx="1.4"/><path d="M5.7 5.7h4.6M5.7 8.1h4.6M5.7 10.5h3"/></svg>',
+  review:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11.6l3.5-3.9 2.5 2.1 5.3-5.9"/><path d="M2.2 14h11.6"/></svg>',
+  pin:'<svg class="pin" viewBox="0 0 16 16"><path d="M8 1.5l1.95 3.95 4.35.63-3.15 3.07.75 4.33L8 11.44 4.1 13.5l.75-4.33L1.7 6.08l4.35-.63z"/></svg>',
+  starOn:'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.9l1.83 3.7 4.09.6-2.96 2.88.7 4.07L8 11.2l-3.66 1.95.7-4.07L2.08 6.2l4.09-.6z"/></svg>',
+  starOff:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"><path d="M8 2.4l1.72 3.48 3.85.56-2.79 2.71.66 3.83L8 11.16l-3.44 1.82.66-3.83L2.43 6.44l3.85-.56z"/></svg>',
+  x:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4.4 4.4l7.2 7.2M11.6 4.4l-7.2 7.2"/></svg>',
+  sync:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 13.8h8.4a3 3 0 0 0 .35-5.98A4.4 4.4 0 0 0 6.05 6.9a3.1 3.1 0 0 0-.25 6.9z"/><path d="M8.2 10.7l1.8-1.8 1.8 1.8"/></svg>',
+  arrow:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9.5M9 4.5L12.5 8 9 11.5"/></svg>',
+  /* 四象限小图标：urg=火烧，imp=星，双标=立方体 */
+  alert:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.4L14 13H2z"/><path d="M8 6.6v3M8 11.3v.1"/></svg>',
+  spark:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.2l1.7 4.1 4.1 1.7-4.1 1.7L8 13.8l-1.7-4.1L2.2 8l4.1-1.7z"/></svg>',
+  users:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.6" r="2.2"/><path d="M2.2 13c0-2.1 1.7-3.5 3.8-3.5S9.8 10.9 9.8 13"/><path d="M11 4.2a2 2 0 0 1 0 3.6M12.2 9.9c1 .4 1.7 1.5 1.7 3.1"/></svg>',
+  cloud:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 12.3h7a2.4 2.4 0 0 0 .3-4.8A3.6 3.6 0 0 0 5 6.6a2.5 2.5 0 0 0-.4 5.7z"/></svg>'
+};
+
+/* 视图清单。k 是状态值，也是 views/<k>.js 里函数的键。
+   newBadge: 该视图在导航上显示什么数字（返回 0 则不显示）。 */
+var VIEWS = [
+  {k:'today',  label:'今日',   ic:'today'},
+  {k:'quad',   label:'四象限', ic:'quad'},
+  {k:'inbox',  label:'收件箱', ic:'inbox'},
+  {k:'projects', label:'项目', ic:'folder'},
+  {k:'notes',  label:'笔记',   ic:'note'},
+  {k:'review', label:'回顾',   ic:'review'},
+  {k:'sync',   label:'同步',   ic:'sync'}
+];
+
+/* 四象限定义。顺序即渲染顺序（左上→右下）。
+   每格用 urg / imp 两个布尔值标识自己，记录上的同名字段直接比对。 */
+var QUADS = [
+  {k:'do',    label:'重要且紧急', hint:'马上做',        urg:1, imp:1, ic:'alert'},
+  {k:'plan',  label:'重要不紧急', hint:'排时间做',      urg:0, imp:1, ic:'spark'},
+  {k:'deleg', label:'不重要但紧急', hint:'能给别人就给别人', urg:1, imp:0, ic:'users'},
+  {k:'drop',  label:'不重要不紧急', hint:'尽量别做',    urg:0, imp:0, ic:'cloud'}
+];
+
+var QUAD_BY = {};
+QUADS.forEach(function(q){ QUAD_BY[q.k] = q; });
+
+/* 已实现视图的注册表。views/<k>.js 里把渲染函数塞进这里。
+   没注册的视图自动落到「待建设」页，不需要在别处写分支。 */
+var VIEW_FN = {};
+
 /* ================= store.js ================= */
 /* ---------- store.js ----------
    数据落地：localStorage 只是缓存，workbench-sync.json 才是真身。
@@ -363,30 +473,6 @@ if (typeof module !== "undefined" && module.exports) {
    换文件名、换浏览器、清缓存，缓存全丢也没关系——json 还在，打开就收回来。
    反过来只靠 localStorage 就是这一版之前的样子：改个名数据就没了。 */
 var KEY = 'myworkbench.v1';
-
-/* 图标 */
-var IC = {
-  today:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3.3"/><path d="M8 1.3v1.5M8 13.2v1.5M1.3 8h1.5M13.2 8h1.5M3.3 3.3l1 1M11.7 11.7l1 1M12.7 3.3l-1 1M4.3 11.7l-1 1"/></svg>',
-  inbox:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2 9.2V13h12V9.2"/><path d="M2 9.2l2-6h8l2 6"/><path d="M2 9.2h3.2l.9 1.6h3.8l.9-1.6H14"/></svg>',
-  folder:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M1.9 12.7V3.8h4.3l1.5 1.9h6.4v7z"/></svg>',
-  note:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3.3" y="2.2" width="9.4" height="11.6" rx="1.4"/><path d="M5.7 5.7h4.6M5.7 8.1h4.6M5.7 10.5h3"/></svg>',
-  review:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11.6l3.5-3.9 2.5 2.1 5.3-5.9"/><path d="M2.2 14h11.6"/></svg>',
-  pin:'<svg class="pin" viewBox="0 0 16 16"><path d="M8 1.5l1.95 3.95 4.35.63-3.15 3.07.75 4.33L8 11.44 4.1 13.5l.75-4.33L1.7 6.08l4.35-.63z"/></svg>',
-  starOn:'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.9l1.83 3.7 4.09.6-2.96 2.88.7 4.07L8 11.2l-3.66 1.95.7-4.07L2.08 6.2l4.09-.6z"/></svg>',
-  starOff:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"><path d="M8 2.4l1.72 3.48 3.85.56-2.79 2.71.66 3.83L8 11.16l-3.44 1.82.66-3.83L2.43 6.44l3.85-.56z"/></svg>',
-  x:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4.4 4.4l7.2 7.2M11.6 4.4l-7.2 7.2"/></svg>',
-  sync:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 13.8h8.4a3 3 0 0 0 .35-5.98A4.4 4.4 0 0 0 6.05 6.9a3.1 3.1 0 0 0-.25 6.9z"/><path d="M8.2 10.7l1.8-1.8 1.8 1.8"/></svg>',
-  arrow:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9.5M9 4.5L12.5 8 9 11.5"/></svg>'
-};
-
-var VIEWS = [
-  {k:'today', label:'今日', ic:'today'},
-  {k:'inbox', label:'收件箱', ic:'inbox'},
-  {k:'projects', label:'项目', ic:'folder'},
-  {k:'notes', label:'笔记', ic:'note'},
-  {k:'review', label:'回顾', ic:'review'},
-  {k:'sync', label:'同步', ic:'sync'}
-];
 
 var S = null;
 
@@ -418,6 +504,10 @@ function load(){
   d.todos.concat(d.inbox).forEach(function(x){
     if (!x.up) x.up = x.created || t0;
     if (x.del === undefined) x.del = 0;
+    /* 四象限的两个标记是后加的字段。老数据没有，补 0 而不是 undefined ——
+       否则 mergeRecords 比 up 时 undefined 参与运算，会出现 NaN 时间戳。 */
+    if (x.urg === undefined) x.urg = 0;
+    if (x.imp === undefined) x.imp = 0;
   });
   return d;
 }
@@ -780,171 +870,11 @@ function viewSync(){
   return h + '</div>';
 }
 
-/* ================= view.js ================= */
-/* ---------- view.js ----------
-   渲染层：只读 S 和本地变量，产 HTML 字符串。所有用户输入都过 esc()。 */
 
-/* ---------- 渲染 ---------- */
-function counts(){
-  var open = 0, done = 0;
-  S.todos.forEach(function(t){ if (t.del) return; t.done ? done++ : open++; });
-  var ib = 0;
-  S.inbox.forEach(function(t){ if (!t.del) ib++; });
-  return {open:open, done:done, inbox:ib};
-}
-
-function renderNav(){
-  var c = counts();
-  var html = '';
-  VIEWS.forEach(function(v){
-    var n = '';
-    if (v.k === 'today') n = c.open > 0 ? String(c.open) : '';
-    if (v.k === 'inbox') n = c.inbox > 0 ? String(c.inbox) : '';
-    html += '<button class="nav' + (S.view === v.k ? ' on' : '') + '" data-view="' + v.k + '">'
-      + IC[v.ic] + '<span class="lb">' + v.label + '</span><span class="cnt">' + n + '</span></button>';
-  });
-  document.getElementById('nav').innerHTML = html;
-  var cur = VIEWS.filter(function(v){ return v.k === S.view; })[0] || VIEWS[0];
-  document.getElementById('crumb').textContent = '/ ' + cur.label;
-  document.title = cur.label + ' · 我的工作台';
-}
-
-function rowHtml(t, isInbox){
-  var meta = '';
-  if (isInbox) {
-    meta = '<div class="meta">' + fmt(t.created) + '</div>';
-  } else {
-    meta = '<div class="meta">'
-      + (t.doneAt ? ('完成于 ' + fmt(t.doneAt)) : fmt(t.created))
-      + '</div>';
-  }
-  var acts = '';
-  if (isInbox) {
-    acts = '<div class="act">'
-      + '<button class="ox" data-conv="' + t.id + '" title="转成待办">转待办</button>'
-      + '<button class="del" data-del="' + t.id + '" title="删掉">' + IC.x + '</button></div>';
-  } else {
-    acts = '<div class="act">'
-      + '<button data-star="' + t.id + '" class="' + (t.star ? 'on' : '') + '" title="' + (t.star ? '取消重点' : '标为重点') + '">' + (t.star ? IC.starOn : IC.starOff) + '</button>'
-      + '<button class="del" data-del="' + t.id + '" title="删除">' + IC.x + '</button></div>';
-  }
-  return '<div class="row' + (isInbox ? ' inb' : '') + '">'
-    + (isInbox ? '' : '<button class="cb' + (t.done ? ' done' : '') + '" data-tog="' + t.id + '" aria-label="完成"></button>')
-    + '<div class="tx"><div class="t' + (t.done ? ' done' : '') + '">' + (t.star ? IC.pin : '') + esc(t.text) + '</div>' + meta + '</div>'
-    + acts + '</div>';
-}
-
-function emptyHtml(icon, t1, t2){
-  return '<div class="empty"><div class="ic">' + IC[icon] + '</div>'
-    + '<div class="t1">' + t1 + '</div><div class="t2">' + t2 + '</div></div>';
-}
-
-function viewToday(){
-  var live = S.todos.filter(function(t){ return !t.del; });
-  var open = live.filter(function(t){ return !t.done; });
-  var done = live.filter(function(t){ return t.done; });
-  open.sort(function(a,b){ return (b.star - a.star) || (b.created - a.created); });
-  done.sort(function(a,b){ return (b.doneAt || 0) - (a.doneAt || 0); });
-
-  var h = '<div class="wrap"><h1 class="page-h">今日</h1>'
-    + '<div class="page-s">' + todayLine() + '</div>'
-    + '<div class="entry"><input id="inp" type="text" placeholder="添加一件事… 以 ! 开头可标为重点" autocomplete="off"><button class="b" id="add">添加</button></div>';
-
-  if (open.length) {
-    h += '<div class="list">' + open.map(function(t){ return rowHtml(t, false); }).join('') + '</div>';
-  } else if (!done.length) {
-    h += emptyHtml('today', '今天还没有事', '在上面输入框写一件，按 <kbd>Enter</kbd> 就行。先只写一件，别列清单。');
-  }
-
-  if (done.length) {
-    h += '<div class="grp">已完成 ' + done.length + '</div><div class="list">'
-      + done.map(function(t){ return rowHtml(t, false); }).join('') + '</div>';
-  }
-
-  h += '<div class="foot-note">' + (CAN_SAVE
-      ? '数据存在这台设备的浏览器里，不上传。想换设备用「导出」带走。'
-      : '当前预览环境不允许本地存储，数据只在这个窗口里有效。用「导出」可以拿走。')
-    + '</div></div>';
-  return h;
-}
-
-function viewInbox(){
-  var list = S.inbox.filter(function(x){ return !x.del; })
-    .sort(function(a,b){ return b.created - a.created; });
-  var h = '<div class="wrap"><h1 class="page-h">收件箱</h1>'
-    + '<div class="page-s">' + (list.length ? list.length + ' 条待清理 · 想到什么先丢进来' : '想到什么先丢进来，不用当时就决定') + '</div>'
-    + '<div class="entry"><input id="inp" type="text" placeholder="记一笔…" autocomplete="off"><button class="b" id="add">记下</button></div>';
-
-  if (list.length) {
-    h += '<div class="list">' + list.map(function(t){ return rowHtml(t, true); }).join('') + '</div>';
-  } else {
-    h += emptyHtml('inbox', '收件箱是空的', '这里是「先接住，回头再理」的地方。写一句就够，不必完整。');
-  }
-  h += '<div class="foot-note">清理节奏：每条只有两个出路——变成待办，或者删掉。别让它堆成第二份待办。</div></div>';
-  return h;
-}
-
-function viewReview(){
-  var now = Date.now();
-  var ws = weekStart();
-  var doneToday = S.todos.filter(function(t){
-    return !t.del && t.done && t.doneAt && new Date(t.doneAt).toDateString() === new Date().toDateString();
-  }).length;
-  var doneWeek = S.todos.filter(function(t){ return !t.del && t.done && t.doneAt && t.doneAt >= ws; }).length;
-  var inboxOpen = S.inbox.filter(function(x){ return !x.del; }).length;
-  var h = '<div class="wrap"><h1 class="page-h">回顾</h1>'
-    + '<div class="page-s">不追数字，只看积压有没有在涨</div>'
-    + '<div class="stats">'
-    + '<div class="stat hot"><div class="n">' + doneToday + '</div><div class="k">今天完成</div></div>'
-    + '<div class="stat"><div class="n">' + doneWeek + '</div><div class="k">本周完成</div></div>'
-    + '<div class="stat"><div class="n">' + inboxOpen + '</div><div class="k">收件箱积压</div></div>'
-    + '</div>';
-  h += '<div class="soon"><div class="t1">这一版只有这三个数</div>'
-    + '<div class="t2">下一版会加：连续完成天数、每条待办从记下到完成用了多久、以及「积压超过 7 天的条目」自动浮出来。<b>现在先不加</b>——数字多了就没人看了。</div></div>';
-  h += '</div>';
-  return h;
-}
-
-function viewSoon(kind){
-  var cfg = {
-    projects:{h:'项目', s:'把待办归到项目下，按项目看进度', ic:'folder',
-      next:'项目 = 一组相关待办的容器。你可能想：「Q4 复盘」下面挂 5 件事，做完 3 件就显示 60%。'},
-    notes:{h:'笔记', s:'比待办长、比文档短的东西', ic:'note',
-      next:'和收件箱的区别：收件箱是「还没想清楚的一句话」，笔记是「已经想清楚、要留存的一段」。合并、打标签、全文搜索都在这一版之后。'}
-  }[kind];
-  return '<div class="wrap"><h1 class="page-h">' + cfg.h + '</h1>'
-    + '<div class="page-s">' + cfg.s + '</div>'
-    + '<div class="soon"><div class="t1">这一版先不做</div>'
-    + '<div class="t2">' + cfg.next + '<br><br>先让你把「今日 + 收件箱」用起来。这两块跑顺了，才知道' + cfg.h + '该长什么样——现在做，只能靠我猜。</div></div></div>';
-}
-
-function render(opts){
-  opts = opts || {};
-  renderNav();
-  var body = document.getElementById('body');
-  var keep = opts.top ? 0 : body.scrollTop;
-  var html = '';
-  if (S.view === 'today') html = viewToday();
-  else if (S.view === 'inbox') html = viewInbox();
-  else if (S.view === 'review') html = viewReview();
-  else if (S.view === 'sync') html = viewSync();
-  else html = viewSoon(S.view);
-  body.innerHTML = html;
-
-  var inp = document.getElementById('inp');
-  if (inp) {
-    inp.addEventListener('keydown', function(e){
-      if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
-        e.preventDefault();
-        submit();
-      }
-    });
-    var btn = document.getElementById('add');
-    if (btn) btn.addEventListener('click', submit);
-    if (opts.focus) setTimeout(function(){ inp.focus(); }, 0);
-  }
-
-  /* 同步页的按钮不走事件委托，单独绑 */
+/* ---------- 同步页的按钮绑定 ----------
+   这几个按钮不走事件委托（同步页要传参数、要 await），所以单独绑。
+   同步页没渲染时 getElementById 全是 null，必须逐个 guard。 */
+function bindSyncView(){
   var bPick = document.getElementById('pick');
   if (bPick) bPick.addEventListener('click', pickFolder);
   var bSyn = document.getElementById('syn');
@@ -964,7 +894,365 @@ function render(opts){
       else { toast('浏览器还是没给权限'); render({}); }
     });
   });
+}
 
+/* ================= ui.js ================= */
+/* ---------- ui.js ----------
+   组件层：能被两个以上视图复用的 HTML 片段。只有这里允许出现「长得一样」的东西。
+   参数一律传值，不读全局 S —— 这样组件本身可以被单独测。 */
+
+/* 页面标题 + 副标题 */
+function uiHead(title, sub){
+  return '<h1 class="page-h">' + esc(title) + '</h1>'
+    + '<div class="page-s">' + sub + '</div>';
+}
+
+/* 输入行。id 固定为 inp / add，actions.js 靠这两个 id 取值。 */
+function uiEntry(placeholder, btnText){
+  return '<div class="entry"><input id="inp" type="text" placeholder="' + esc(placeholder) + '"'
+    + ' autocomplete="off"><button class="b" id="add">' + esc(btnText || '添加') + '</button></div>';
+}
+
+/* 空状态：一个图标 + 两句解释 */
+function uiEmpty(icon, t1, t2){
+  var ic = IC[icon] || '';
+  return '<div class="empty"><div class="ic">' + ic + '</div>'
+    + '<div class="t1">' + esc(t1) + '</div><div class="t2">' + t2 + '</div></div>';
+}
+
+/* 分组小标题，右侧拉一条线 */
+function uiGroup(text, extra){
+  return '<div class="grp">' + esc(text) + (extra || '') + '</div>';
+}
+
+/* 统计卡。n 是数字，k 是标签，hot 让数字用强调色 */
+function uiStat(n, k, hot){
+  return '<div class="stat' + (hot ? ' hot' : '') + '"><div class="n">' + esc(String(n)) + '</div>'
+    + '<div class="k">' + esc(k) + '</div></div>';
+}
+
+/* 「这一版先不做」的说明块 */
+function uiSoon(t1, t2){
+  return '<div class="soon"><div class="t1">' + esc(t1) + '</div>'
+    + '<div class="t2">' + (t2 || '') + '</div></div>';
+}
+
+/* 页脚小字 */
+function uiFoot(text){
+  return '<div class="foot-note">' + text + '</div>';
+}
+
+/* 分段控件（三选一之类）。items: [{k, label, n}]，active 是当前 k。
+   data 前缀决定事件怎么认：data-seg="<组名>" + data-k="<值>"。 */
+function uiSeg(name, items, active){
+  return '<div class="seg">' + items.map(function(it){
+    return '<button class="sg' + (it.k === active ? ' on' : '') + '"'
+      + ' data-seg="' + esc(name) + '" data-k="' + esc(it.k) + '">'
+      + esc(it.label) + (it.n ? '<i>' + esc(String(it.n)) + '</i>' : '') + '</button>';
+  }).join('') + '</div>';
+}
+
+/* ================= views/today.js ================= */
+/* ---------- views/today.js ----------
+   今日：所有未完成的事一屏看完，重点排前面。
+   数据来源仍是一条 flat 待办列表（v1 的语义），四象限只是它的另一个视角。 */
+
+/* 待办行的通用渲染。四象限 / 今日 / 清单视图共用，放这里而不是 ui.js，
+   因为它依赖 IC 与 fmt 的组合语义太多，抽成通用组件反而难读。 */
+function todoRow(t, opt){
+  opt = opt || {};
+  var meta = '<div class="meta">'
+    + (t.done ? ('完成于 ' + fmt(t.doneAt)) : fmt(t.created));
+
+  /* 四象限标记：两个小点，有标记才亮 */
+  var marks = '';
+  if (t.imp) marks += '<span class="tag imp">重要</span>';
+  if (t.urg) marks += '<span class="tag urg">紧急</span>';
+  if (marks) meta += '<span class="mk">' + marks + '</span>';
+  meta += '</div>';
+
+  var acts = '<div class="act">'
+    + '<button data-urg="' + t.id + '" class="' + (t.urg ? 'on u' : '') + '"'
+    + ' title="' + (t.urg ? '取消紧急' : '标记紧急') + '">急</button>'
+    + '<button data-imp="' + t.id + '" class="' + (t.imp ? 'on i' : '') + '"'
+    + ' title="' + (t.imp ? '取消重要' : '标记重要') + '">重</button>'
+    + '<button class="del" data-del="' + t.id + '" title="删除">' + IC.x + '</button></div>';
+
+  return '<div class="row" data-id="' + t.id + '">'
+    + '<button class="cb' + (t.done ? ' done' : '') + '" data-tog="' + t.id + '" aria-label="完成"></button>'
+    + '<div class="tx"><div class="t' + (t.done ? ' done' : '') + '">'
+    + (t.star ? IC.pin : '') + esc(t.text) + '</div>' + meta + '</div>'
+    + acts + '</div>';
+}
+
+/* 收件箱行：没有勾选框，只有「转待办」和「删」 */
+function inboxRow(t){
+  return '<div class="row inb"><div class="tx">'
+    + '<div class="t">' + esc(t.text) + '</div>'
+    + '<div class="meta">' + fmt(t.created) + '</div></div>'
+    + '<div class="act">'
+    + '<button class="ox" data-conv="' + t.id + '" title="转成待办">转待办</button>'
+    + '<button class="del" data-del="' + t.id + '" title="删掉">' + IC.x + '</button></div></div>';
+}
+
+function viewToday(){
+  var live = S.todos.filter(function(t){ return !t.del; });
+  var open = live.filter(function(t){ return !t.done; });
+  var done = live.filter(function(t){ return t.done; });
+  open.sort(function(a,b){ return (b.star - a.star) || (b.created - a.created); });
+  done.sort(function(a,b){ return (b.doneAt || 0) - (a.doneAt || 0); });
+
+  var h = '<div class="wrap">' + uiHead('今日', todayLine())
+    + uiEntry('添加一件事… 以 ! 开头可标为重点', '添加');
+
+  if (open.length) {
+    h += '<div class="list">' + open.map(function(t){ return todoRow(t, {}); }).join('') + '</div>';
+  } else if (!done.length) {
+    h += '<div class="list">' + uiEmpty('today', '今天还没有事',
+      '在上面输入框写一件，按 <kbd>Enter</kbd> 就行。先只写一件，别列清单。') + '</div>';
+  }
+
+  if (done.length) {
+    h += uiGroup('已完成 ' + done.length)
+      + '<div class="list">' + done.map(function(t){ return todoRow(t, {}); }).join('') + '</div>';
+  }
+
+  h += uiFoot(CAN_SAVE
+    ? '数据存在这台设备的浏览器里，不上传。想换设备用「导出」带走。'
+    : '当前预览环境不允许本地存储，数据只在这个窗口里有效。用「导出」可以拿走。');
+  return h + '</div>';
+}
+
+VIEW_FN.today = viewToday;
+
+/* ================= views/quad.js ================= */
+/* ---------- views/quad.js ----------
+   四象限：把同一批待办按「重要 × 紧急」切开。不是另一份数据，只是另一个视角。
+
+   为什么用两个独立布尔字段而不是一个 quadrant 字符串：
+   一条任务「重要」这件事本身有含义（四象限在哪个格子是推论，不是属性）。
+   存两个布尔，以后加筛选、加排序都能直接用；存字符串则是把推论当真相。
+
+   没标过的任务落在「不重要不紧急」——那格的语义就是「还没想清楚该不该做」，
+   正好是未分类任务的归宿，不需要再造一个「未分类」格子。
+*/
+
+function quadOf(t){ return (t.urg ? 'u' : '-') + (t.imp ? 'i' : '-'); }
+
+/* 空格子的话，每格不一样。都写「空着」等于没说。 */
+var QUAD_EMPTY = {
+  do:'这一格空着最好。',
+  plan:'这一格该是最满的。',
+  deleg:'没有火烧眉毛的事。',
+  drop:'不用管。'
+};
+
+function viewQuad(){
+  var open = S.todos.filter(function(t){ return !t.del && !t.done; });
+  var doneN = S.todos.filter(function(t){ return !t.del && t.done; }).length;
+
+  /* 只有「两标都有」的任务才需要提示——其余自然落在各自格子 */
+  var h = '<div class="wrap">' + uiHead('四象限',
+      '重要 × 紧急 · ' + open.length + ' 件事待安排'
+      + (doneN ? '，已完成 ' + doneN + ' 件不在此列' : ''))
+    + '<div class="quad">';
+
+  QUADS.forEach(function(q){
+    var items = open.filter(function(t){ return quadOf(t) === (q.urg ? 'u' : '-') + (q.imp ? 'i' : '-'); });
+    items.sort(function(a,b){ return (b.star - a.star) || (b.created - a.created); });
+
+    h += '<div class="qc' + (q.k === 'do' ? ' hot' : q.k === 'plan' ? ' warm' : '') + '" data-q="' + q.k + '">'
+      + '<div class="qh"><span class="qi">' + (IC[q.ic] || '') + '</span>'
+      + '<span class="qt">' + esc(q.label) + '</span>'
+      + '<span class="qn">' + (items.length || '') + '</span></div>'
+      + '<div class="qs">' + esc(q.hint) + '</div>';
+
+    if (items.length) {
+      h += '<div class="list">' + items.map(function(t){
+        return '<div class="row" data-id="' + t.id + '">'
+          + '<button class="cb" data-tog="' + t.id + '" aria-label="完成"></button>'
+          + '<div class="tx"><div class="t">' + (t.star ? IC.pin : '') + esc(t.text) + '</div></div>'
+          + '<div class="act">'
+          + '<button data-urg="' + t.id + '" class="' + (t.urg ? 'on u' : '') + '" title="紧急">急</button>'
+          + '<button data-imp="' + t.id + '" class="' + (t.imp ? 'on i' : '') + '" title="重要">重</button>'
+          + '<button class="del" data-del="' + t.id + '" title="删除">' + IC.x + '</button>'
+          + '</div></div>';
+      }).join('') + '</div>';
+    } else {
+      h += '<div class="qempty">' + esc(QUAD_EMPTY[q.k] || '空着') + '</div>';
+    }
+
+    /* 每格都能直接加一件，加进去就带这一格的标记 */
+    h += '<div class="entries"><div class="qform">'
+      + '<input type="text" data-qin="' + q.k + '" placeholder="加一件…" autocomplete="off">'
+      + '<button class="qadd" data-addq="' + q.k + '">+</button>'
+      + '</div></div></div>';
+  });
+
+  h += '</div>';
+
+  h += uiFoot('在「今日」里那两列「急 / 重」按钮是同一套标记，两边改的是同一份数据。'
+    + '勾完会从格子里消失——这一格只看还没做完的。');
+  return h + '</div>';
+}
+
+VIEW_FN.quad = viewQuad;
+
+/* ================= views/inbox.js ================= */
+/* ---------- views/inbox.js ----------
+   收件箱：只负责接住，不负责整理。每条只有两个出口——转待办，或者删。 */
+
+function viewInbox(){
+  var list = S.inbox.filter(function(x){ return !x.del; })
+    .sort(function(a,b){ return b.created - a.created; });
+  var h = '<div class="wrap">' + uiHead('收件箱', list.length
+      ? list.length + ' 条待清理 · 想到什么先丢进来'
+      : '想到什么先丢进来，不用当时就决定')
+    + uiEntry('记一笔…', '记下');
+
+  if (list.length) {
+    h += '<div class="list">' + list.map(inboxRow).join('') + '</div>';
+  } else {
+    h += '<div class="list">' + uiEmpty('inbox', '收件箱是空的',
+      '这里是「先接住，回头再理」的地方。写一句就够，不必完整。') + '</div>';
+  }
+  h += uiFoot('清理节奏：每条只有两个出路——变成待办，或者删掉。别让它堆成第二份待办。');
+  return h + '</div>';
+}
+
+VIEW_FN.inbox = viewInbox;
+
+/* ================= views/review.js ================= */
+/* ---------- views/review.js ----------
+   回顾：只看三个数——积压有没有在涨。数字多了就没人看了。 */
+
+function viewReview(){
+  var ws = weekStart();
+  var today = new Date().toDateString();
+  var doneToday = 0, doneWeek = 0;
+  S.todos.forEach(function(t){
+    if (t.del || !t.done || !t.doneAt) return;
+    if (new Date(t.doneAt).toDateString() === today) doneToday++;
+    if (t.doneAt >= ws) doneWeek++;
+  });
+  var inboxOpen = S.inbox.filter(function(x){ return !x.del; }).length;
+
+  return '<div class="wrap">' + uiHead('回顾', '不追数字，只看积压有没有在涨')
+    + '<div class="stats">'
+    + uiStat(doneToday, '今天完成', true)
+    + uiStat(doneWeek, '本周完成')
+    + uiStat(inboxOpen, '收件箱积压')
+    + '</div>'
+    + uiSoon('这一版只有这三个数',
+        '下一版会加：连续完成天数、每条待办从记下到完成用了多久、以及「积压超过 7 天的条目」自动浮出来。'
+        + '<b>现在先不加</b>——数字多了就没人看了。')
+    + '</div>';
+}
+
+VIEW_FN.review = viewReview;
+
+/* ================= views/soon.js ================= */
+/* ---------- views/soon.js ----------
+   还没做的视图。新增一个功能时，先从 VIEWS 里注册它、再写 views/<k>.js；
+   在写之前它自动落到这里，不需要在别处加分支。 */
+
+var SOON_CFG = {
+  projects:{h:'项目', s:'把待办归到项目下，按项目看进度', ic:'folder',
+    next:'项目 = 一组相关待办的容器。你可能想：「Q4 复盘」下面挂 5 件事，做完 3 件就显示 60%。'},
+  notes:{h:'笔记', s:'比待办长、比文档短的东西', ic:'note',
+    next:'和收件箱的区别：收件箱是「还没想清楚的一句话」，笔记是「已经想清楚、要留存的一段」。合并、打标签、全文搜索都在这一版之后。'}
+};
+
+function viewSoon(kind){
+  var cfg = SOON_CFG[kind] || {h:kind, s:'', ic:'note', next:''};
+  return '<div class="wrap">' + uiHead(cfg.h, cfg.s)
+    + uiSoon('这一版先不做', cfg.next + '<br><br>先让你把已有功能用起来。'
+        + '这块该长什么样，得看你怎么用别的部分——现在做，只能靠我猜。')
+    + '</div>';
+}
+
+/* ================= render.js ================= */
+/* ---------- render.js ----------
+   路由与装配：选视图、算导航数字、把 HTML 塞进 #body、绑一次性事件。
+
+   加视图的流程：在 config.js 的 VIEWS 里注册 → 在 views/ 下写函数并
+   VIEW_FN[k]=... 。这里不用改。
+*/
+
+function counts(){
+  var open = 0, done = 0;
+  S.todos.forEach(function(t){ if (t.del) return; t.done ? done++ : open++; });
+  var ib = 0;
+  S.inbox.forEach(function(t){ if (!t.del) ib++; });
+  return {open:open, done:done, inbox:ib};
+}
+
+/* 导航上的角标。返回空串就不显示。 */
+function navBadge(k, c){
+  if (k === 'today') return c.open > 0 ? String(c.open) : '';
+  if (k === 'inbox') return c.inbox > 0 ? String(c.inbox) : '';
+  return '';
+}
+
+function renderNav(){
+  var c = counts();
+  document.getElementById('nav').innerHTML = VIEWS.map(function(v){
+    return '<button class="nav' + (S.view === v.k ? ' on' : '') + '" data-view="' + v.k + '">'
+      + (IC[v.ic] || '') + '<span class="lb">' + v.label + '</span>'
+      + '<span class="cnt">' + navBadge(v.k, c) + '</span></button>';
+  }).join('');
+
+  var cur = VIEWS.filter(function(v){ return v.k === S.view; })[0] || VIEWS[0];
+  document.getElementById('crumb').textContent = '/ ' + cur.label;
+  document.title = cur.label + ' · 我的工作台';
+}
+
+/* 只给当前视图绑事件。每次 render 后 DOM 是新的，绑旧的会泄漏。 */
+var pendingFocus = false;
+
+function bindView(){
+  var inp = document.getElementById('inp');
+  if (inp) {
+    inp.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+        e.preventDefault();
+        submit();
+      }
+    });
+    var btn = document.getElementById('add');
+    if (btn) btn.addEventListener('click', submit);
+    if (pendingFocus) { pendingFocus = false; setTimeout(function(){ inp.focus(); }, 0); }
+  }
+
+  /* 四象限每格一个输入框，它们不叫 inp（那个 id 是主输入框专用的）。
+     回车走 quadSubmit，才能带上这一格的标记。 */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-qin]'), function(box){
+    box.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+        e.preventDefault();
+        quadSubmit(box.dataset.qin);
+      }
+    });
+  });
+
+  bindSyncView();
+}
+
+function currentView(){
+  var fn = VIEW_FN[S.view];
+  if (fn) return fn();
+  if (S.view === 'sync') return viewSync();
+  return viewSoon(S.view);
+}
+
+function render(opts){
+  opts = opts || {};
+  if (opts.focus) pendingFocus = true;
+  renderNav();
+  var body = document.getElementById('body');
+  var keep = opts.top ? 0 : body.scrollTop;
+  body.innerHTML = currentView();
+  bindView();
   body.scrollTop = keep;
 }
 
@@ -986,10 +1274,33 @@ function submit(){
     var star = false;
     if (/^[!！]/.test(v)) { star = true; v = v.replace(/^[!！]\s*/, ''); }
     if (!v) return;
-    S.todos.push({id:uid(), text:v, done:false, doneAt:0, star:star, created:now, up:now, del:0});
+    S.todos.push({id:uid(), text:v, done:false, doneAt:0, star:star,
+                  urg:0, imp:0, created:now, up:now, del:0});
   }
   save();
   render({focus:true, top:true});
+}
+
+/* 象限内联添加：输入框在该格里，提交时直接带上这一格的 urg/imp。
+   注意不能复用 submit()——那个靠 S.view 判断往 todos 还是 inbox 里塞，
+   在四象限页会把事塞进收件箱。这里必须自己写。 */
+function quadSubmit(k){
+  var box = document.querySelector('.qc[data-q="' + k + '"]');
+  if (!box) return;
+  var inp = box.querySelector('input');
+  var v = inp ? inp.value.trim() : '';
+  if (!v) { if (inp) inp.focus(); return; }
+  var q = QUAD_BY[k];
+  var now = Date.now();
+  var star = false;
+  if (/^[!！]/.test(v)) { star = true; v = v.replace(/^[!！]\s*/, ''); }
+  if (!v) return;
+  S.todos.push({id:uid(), text:v, done:false, doneAt:0, star:star,
+                urg:q.urg, imp:q.imp, created:now, up:now, del:0});
+  save(); render();
+  /* 重新渲染后 DOM 换了，重新聚焦到同一格，方便连着记几件 */
+  var again = document.querySelector('.qc[data-q="' + k + '"] input');
+  if (again) again.focus();
 }
 
 function findTodo(id){
@@ -997,8 +1308,9 @@ function findTodo(id){
   return null;
 }
 
+/* 行内加在某个象限后，容器变窄，只留「取消象限标记」和「删」；勾选框留着。 */
 document.addEventListener('click', function(e){
-  var t = e.target.closest ? e.target.closest('[data-view],[data-tog],[data-star],[data-del],[data-conv]') : null;
+  var t = e.target.closest ? e.target.closest('[data-view],[data-tog],[data-star],[data-del],[data-conv],[data-urg],[data-imp],[data-addq]') : null;
 
   if (t && t.dataset.view) {
     S.view = t.dataset.view;
@@ -1006,19 +1318,33 @@ document.addEventListener('click', function(e){
     save(); render({top:true});
     return;
   }
+  if (t && t.dataset.addq) {
+    quadSubmit(t.dataset.addq);
+    return;
+  }
+  if (t && t.dataset.urg) {
+    var tu = findTodo(t.dataset.urg);
+    if (tu) { tu.urg = tu.urg ? 0 : 1; bumpUp(tu); save(); render(); }
+    return;
+  }
+  if (t && t.dataset.imp) {
+    var ti = findTodo(t.dataset.imp);
+    if (ti) { ti.imp = ti.imp ? 0 : 1; bumpUp(ti); save(); render(); }
+    return;
+  }
   if (t && t.dataset.tog) {
     var todo = findTodo(t.dataset.tog);
     if (todo) {
       todo.done = !todo.done;
       todo.doneAt = todo.done ? Date.now() : 0;
-      todo.up = Date.now();
+      bumpUp(todo);
       save(); render();
     }
     return;
   }
   if (t && t.dataset.star) {
     var td = findTodo(t.dataset.star);
-    if (td) { td.star = !td.star; td.up = Date.now(); save(); render(); }
+    if (td) { td.star = !td.star; bumpUp(td); save(); render(); }
     return;
   }
   if (t && t.dataset.del) {
@@ -1046,7 +1372,8 @@ document.addEventListener('click', function(e){
       item.del = 1;
       bumpUp(item);
       var tnow = Date.now();
-      S.todos.push({id:uid(), text:item.text, done:false, doneAt:0, star:false, created:tnow, up:tnow, del:0});
+      S.todos.push({id:uid(), text:item.text, done:false, doneAt:0, star:false,
+                    urg:0, imp:0, created:tnow, up:tnow, del:0});
     }
     save(); render();
     return;
