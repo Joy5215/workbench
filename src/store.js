@@ -8,30 +8,6 @@
    反过来只靠 localStorage 就是这一版之前的样子：改个名数据就没了。 */
 var KEY = 'myworkbench.v1';
 
-/* 图标 */
-var IC = {
-  today:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3.3"/><path d="M8 1.3v1.5M8 13.2v1.5M1.3 8h1.5M13.2 8h1.5M3.3 3.3l1 1M11.7 11.7l1 1M12.7 3.3l-1 1M4.3 11.7l-1 1"/></svg>',
-  inbox:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2 9.2V13h12V9.2"/><path d="M2 9.2l2-6h8l2 6"/><path d="M2 9.2h3.2l.9 1.6h3.8l.9-1.6H14"/></svg>',
-  folder:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M1.9 12.7V3.8h4.3l1.5 1.9h6.4v7z"/></svg>',
-  note:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3.3" y="2.2" width="9.4" height="11.6" rx="1.4"/><path d="M5.7 5.7h4.6M5.7 8.1h4.6M5.7 10.5h3"/></svg>',
-  review:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11.6l3.5-3.9 2.5 2.1 5.3-5.9"/><path d="M2.2 14h11.6"/></svg>',
-  pin:'<svg class="pin" viewBox="0 0 16 16"><path d="M8 1.5l1.95 3.95 4.35.63-3.15 3.07.75 4.33L8 11.44 4.1 13.5l.75-4.33L1.7 6.08l4.35-.63z"/></svg>',
-  starOn:'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.9l1.83 3.7 4.09.6-2.96 2.88.7 4.07L8 11.2l-3.66 1.95.7-4.07L2.08 6.2l4.09-.6z"/></svg>',
-  starOff:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"><path d="M8 2.4l1.72 3.48 3.85.56-2.79 2.71.66 3.83L8 11.16l-3.44 1.82.66-3.83L2.43 6.44l3.85-.56z"/></svg>',
-  x:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4.4 4.4l7.2 7.2M11.6 4.4l-7.2 7.2"/></svg>',
-  sync:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 13.8h8.4a3 3 0 0 0 .35-5.98A4.4 4.4 0 0 0 6.05 6.9a3.1 3.1 0 0 0-.25 6.9z"/><path d="M8.2 10.7l1.8-1.8 1.8 1.8"/></svg>',
-  arrow:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9.5M9 4.5L12.5 8 9 11.5"/></svg>'
-};
-
-var VIEWS = [
-  {k:'today', label:'今日', ic:'today'},
-  {k:'inbox', label:'收件箱', ic:'inbox'},
-  {k:'projects', label:'项目', ic:'folder'},
-  {k:'notes', label:'笔记', ic:'note'},
-  {k:'review', label:'回顾', ic:'review'},
-  {k:'sync', label:'同步', ic:'sync'}
-];
-
 var S = null;
 
 /* ---------- 存储 ---------- */
@@ -62,6 +38,10 @@ function load(){
   d.todos.concat(d.inbox).forEach(function(x){
     if (!x.up) x.up = x.created || t0;
     if (x.del === undefined) x.del = 0;
+    /* 四象限的两个标记是后加的字段。老数据没有，补 0 而不是 undefined ——
+       否则 mergeRecords 比 up 时 undefined 参与运算，会出现 NaN 时间戳。 */
+    if (x.urg === undefined) x.urg = 0;
+    if (x.imp === undefined) x.imp = 0;
   });
   return d;
 }

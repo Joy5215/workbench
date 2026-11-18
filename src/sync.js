@@ -311,3 +311,29 @@ function viewSync(){
 
   return h + '</div>';
 }
+
+
+/* ---------- 同步页的按钮绑定 ----------
+   这几个按钮不走事件委托（同步页要传参数、要 await），所以单独绑。
+   同步页没渲染时 getElementById 全是 null，必须逐个 guard。 */
+function bindSyncView(){
+  var bPick = document.getElementById('pick');
+  if (bPick) bPick.addEventListener('click', pickFolder);
+  var bSyn = document.getElementById('syn');
+  if (bSyn) bSyn.addEventListener('click', function(){ syncNow('full'); });
+  var bUp = document.getElementById('synup');
+  if (bUp) bUp.addEventListener('click', function(){ syncNow('up'); });
+  var bDown = document.getElementById('syndown');
+  if (bDown) bDown.addEventListener('click', function(){ syncNow('down'); });
+  var bForget = document.getElementById('forget');
+  if (bForget) bForget.addEventListener('click', forgetFolder);
+  var bRe = document.getElementById('reauth');
+  if (bRe) bRe.addEventListener('click', function(){
+    if (!syncHandle) return;
+    permOf(syncHandle, true).then(function(p){
+      SY.perm = p;
+      if (p === 'granted') { toast('权限已恢复'); autocheck(); }
+      else { toast('浏览器还是没给权限'); render({}); }
+    });
+  });
+}

@@ -11,11 +11,16 @@ const CASES = [
   { label: '构建', url: ROOT + '/工作台/dist/我的工作台.html' },
 ];
 
+/* 只比「基线那份也有的字段」。
+   理由：新版本加了字段（如四象限的 urg/imp），它的默认值等于「没有这个功能之前的行为」，
+   不该算作回归；但老字段的取值一个都不许变。漏掉的真 bug 会体现为老字段值不同，仍会报错。 */
+const V1_FIELDS = ['text', 'done', 'doneAt', 'star', 'del'];
+
 function mask(state) {
   // 去掉时间相关与随机 id，只留结构与业务字段
   const clean = (arr) => (arr || []).map((x) => {
-    const o = Object.assign({}, x);
-    delete o.id; delete o.up; delete o.ts; delete o.created;
+    const o = {};
+    V1_FIELDS.forEach((k) => { if (x[k] !== undefined) o[k] = x[k]; });
     return o;
   });
   return {
@@ -51,6 +56,8 @@ async function run(c) {
   await add('买牛奶');
   await add('写周报');
   await add('这条要删掉');
+  await add('! 标重点的那条');
+  await add('第四件用来验证排序');
 
   // 删除第一条（走事件委托，模拟真实点击）
   await page.evaluate(() => {
@@ -73,7 +80,17 @@ async function run(c) {
   await new Promise((r) => setTimeout(r, 150));
 
   const raw = await page.evaluate(() => localStorage.getItem('myworkbench.v1'));
-  const text = await page.evaluate(() => (document.querySelector('.body') || document.body).innerText.slice(0, 300));
+  /* 文本比「标题 + 每条任务文案 + 副标题」，不比按钮文字：
+     新版本会在行内多出「急 / 重」两个切换，那是新增功能，不是回归。
+     任务文案与标题一个字都不许变。 */
+  const text = await page.evaluate(() => {
+    const body = document.querySelector('.body') || document.body;
+    const pick = (sel) => Array.from(body.querySelectorAll(sel)).map((e) => e.innerText.trim());
+    return {
+      h: pick('.page-h'), sub: pick('.page-s'),
+      t: pick('.tx .t'), empty: pick('.empty .t1'),
+    };
+  });
   const domRows = await page.evaluate(() => document.querySelectorAll('.row').length);
 
   await browser.close();

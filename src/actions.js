@@ -15,10 +15,33 @@ function submit(){
     var star = false;
     if (/^[!！]/.test(v)) { star = true; v = v.replace(/^[!！]\s*/, ''); }
     if (!v) return;
-    S.todos.push({id:uid(), text:v, done:false, doneAt:0, star:star, created:now, up:now, del:0});
+    S.todos.push({id:uid(), text:v, done:false, doneAt:0, star:star,
+                  urg:0, imp:0, created:now, up:now, del:0});
   }
   save();
   render({focus:true, top:true});
+}
+
+/* 象限内联添加：输入框在该格里，提交时直接带上这一格的 urg/imp。
+   注意不能复用 submit()——那个靠 S.view 判断往 todos 还是 inbox 里塞，
+   在四象限页会把事塞进收件箱。这里必须自己写。 */
+function quadSubmit(k){
+  var box = document.querySelector('.qc[data-q="' + k + '"]');
+  if (!box) return;
+  var inp = box.querySelector('input');
+  var v = inp ? inp.value.trim() : '';
+  if (!v) { if (inp) inp.focus(); return; }
+  var q = QUAD_BY[k];
+  var now = Date.now();
+  var star = false;
+  if (/^[!！]/.test(v)) { star = true; v = v.replace(/^[!！]\s*/, ''); }
+  if (!v) return;
+  S.todos.push({id:uid(), text:v, done:false, doneAt:0, star:star,
+                urg:q.urg, imp:q.imp, created:now, up:now, del:0});
+  save(); render();
+  /* 重新渲染后 DOM 换了，重新聚焦到同一格，方便连着记几件 */
+  var again = document.querySelector('.qc[data-q="' + k + '"] input');
+  if (again) again.focus();
 }
 
 function findTodo(id){
@@ -26,8 +49,9 @@ function findTodo(id){
   return null;
 }
 
+/* 行内加在某个象限后，容器变窄，只留「取消象限标记」和「删」；勾选框留着。 */
 document.addEventListener('click', function(e){
-  var t = e.target.closest ? e.target.closest('[data-view],[data-tog],[data-star],[data-del],[data-conv]') : null;
+  var t = e.target.closest ? e.target.closest('[data-view],[data-tog],[data-star],[data-del],[data-conv],[data-urg],[data-imp],[data-addq]') : null;
 
   if (t && t.dataset.view) {
     S.view = t.dataset.view;
@@ -35,19 +59,33 @@ document.addEventListener('click', function(e){
     save(); render({top:true});
     return;
   }
+  if (t && t.dataset.addq) {
+    quadSubmit(t.dataset.addq);
+    return;
+  }
+  if (t && t.dataset.urg) {
+    var tu = findTodo(t.dataset.urg);
+    if (tu) { tu.urg = tu.urg ? 0 : 1; bumpUp(tu); save(); render(); }
+    return;
+  }
+  if (t && t.dataset.imp) {
+    var ti = findTodo(t.dataset.imp);
+    if (ti) { ti.imp = ti.imp ? 0 : 1; bumpUp(ti); save(); render(); }
+    return;
+  }
   if (t && t.dataset.tog) {
     var todo = findTodo(t.dataset.tog);
     if (todo) {
       todo.done = !todo.done;
       todo.doneAt = todo.done ? Date.now() : 0;
-      todo.up = Date.now();
+      bumpUp(todo);
       save(); render();
     }
     return;
   }
   if (t && t.dataset.star) {
     var td = findTodo(t.dataset.star);
-    if (td) { td.star = !td.star; td.up = Date.now(); save(); render(); }
+    if (td) { td.star = !td.star; bumpUp(td); save(); render(); }
     return;
   }
   if (t && t.dataset.del) {
@@ -75,7 +113,8 @@ document.addEventListener('click', function(e){
       item.del = 1;
       bumpUp(item);
       var tnow = Date.now();
-      S.todos.push({id:uid(), text:item.text, done:false, doneAt:0, star:false, created:tnow, up:tnow, del:0});
+      S.todos.push({id:uid(), text:item.text, done:false, doneAt:0, star:false,
+                    urg:0, imp:0, created:tnow, up:tnow, del:0});
     }
     save(); render();
     return;

@@ -163,5 +163,34 @@ t('uid 不重复', () => {
   assert.strictEqual(s.size, 2000);
 });
 
+console.log('\n四象限字段');
+t('load 会给老数据补 urg / imp = 0', () => {
+  // store.js 里那段补丁的逻辑抄一份在这测：老数据只有 v1 字段
+  const migrate = (x) => {
+    if (x.urg === undefined) x.urg = 0;
+    if (x.imp === undefined) x.imp = 0;
+    return x;
+  };
+  const old = { id: 'a', text: '旧', done: false, del: 0, up: 1 };
+  migrate(old);
+  assert.strictEqual(old.urg, 0);
+  assert.strictEqual(old.imp, 0);
+});
+
+t('未标过的任务 up 参与合并时不产生 NaN', () => {
+  const todos = [{ id: 'a', up: 10, text: '旧', urg: 0, imp: 0 }];
+  mergeRecords(todos, [], { todos: [{ id: 'a', up: 20, text: '新', urg: 1, imp: 1 }] });
+  assert.strictEqual(todos[0].urg, 1);
+  assert.ok(Number.isFinite(todos[0].up), 'up 变成了 ' + todos[0].up);
+});
+
+t('墓碑记录也带着象限字段，合并后不会出现 undefined', () => {
+  const todos = [{ id: 'a', up: 5, text: 'X', urg: 1, imp: 0, del: 1 }];
+  const st = mergeRecords(todos, [], { todos: [{ id: 'a', up: 9, text: 'X', urg: 0, imp: 0 }] });
+  assert.strictEqual(st.upd, 1);
+  assert.strictEqual(todos[0].del, 0);
+  assert.strictEqual(todos[0].urg, 0);
+});
+
 console.log(`\n${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);

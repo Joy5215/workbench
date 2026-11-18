@@ -19,8 +19,27 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "src")
 OUT = os.path.join(HERE, "dist", "我的工作台.html")
 
-# 顺序即依赖顺序。core 在最前（纯函数），main 在最后（启动）。
-ORDER = ["core.js", "store.js", "sync.js", "view.js", "actions.js", "main.js"]
+# 顺序即依赖顺序：纯函数 → 配置 → 数据 → UI 组件 → 各视图 → 路由 → 动作 → 启动。
+# 加一个视图：在 config.js 的 VIEWS 里注册，再在 VIEWS_FILES 里加一行 views/<k>.js。
+ORDER = [
+    "core.js",      # 纯函数，能被 node 单测
+    "config.js",    # 视图清单、图标、四象限定义
+    "store.js",     # localStorage 与探测
+    "sync.js",      # 文件夹同步
+    "ui.js",        # 通用组件
+]
+VIEWS_FILES = [
+    "views/today.js",
+    "views/quad.js",
+    "views/inbox.js",
+    "views/review.js",
+    "views/soon.js",   # 给未实现的视图兜底（不注册到 VIEW_FN）
+]
+TAIL = [
+    "render.js",    # 路由与装配
+    "actions.js",   # 写操作
+    "main.js",      # 启动
+]
 
 
 def read(name):
@@ -32,13 +51,29 @@ def build():
     tpl = read("index.html")
     css = read("style.css")
     parts = []
-    for name in ORDER:
+    for name in ORDER + VIEWS_FILES + TAIL:
         parts.append("/* ================= %s ================= */\n%s" % (name, read(name)))
     js = "\n\n".join(parts)
 
     if "/* @CSS@ */" not in tpl or "/* @JS@ */" not in tpl:
         sys.exit("模板里缺占位符 @CSS@ / @JS@")
     out = tpl.replace("/* @CSS@ */", css).replace("/* @JS@ */", js)
+
+    # PWA：只有当 manifest 与 service worker 两个文件都在时才注入。
+    # 单文件产物（双击打开）不该引用不存在的文件，否则控制台永远两条 404。
+    mf = os.path.join(SRC, "manifest.webmanifest")
+    sw = os.path.join(SRC, "sw.js")
+    if os.path.exists(mf) and os.path.exists(sw):
+        head = ('<link rel="manifest" href="manifest.webmanifest">\n'
+                '<link rel="apple-touch-icon" href="icon-192.png">\n'
+                '<meta name="apple-mobile-web-app-capable" content="yes">\n'
+                '<meta name="apple-mobile-web-app-title" content="工作台">')
+        out = out.replace("<title>", head + "\n<title>", 1)
+        # 注册代码单独一个 <script>，放在 IIFE 外面
+        hook = ("if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {\n"
+                "  addEventListener('load', function(){ navigator.serviceWorker.register('sw.js')"
+                ".catch(function(){}); });\n}")
+        out = out.replace("</body>", "<script>\n%s\n</script>\n</body>" % hook, 1)
     return out
 
 
