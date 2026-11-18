@@ -47,6 +47,7 @@ function bindView(){
     });
     var btn = document.getElementById('add');
     if (btn) btn.addEventListener('click', submit);
+    bindPaste(inp, '');
     if (pendingFocus) { pendingFocus = false; setTimeout(function(){ inp.focus(); }, 0); }
   }
 
@@ -59,6 +60,7 @@ function bindView(){
         quadSubmit(box.dataset.qin);
       }
     });
+    bindPaste(box, box.dataset.qin);
   });
   var qi = document.querySelector('[data-qin]');
   if (qi) setTimeout(function(){ qi.focus(); }, 0);

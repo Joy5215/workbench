@@ -85,6 +85,8 @@ function toast(msg, undoFn){
   var u = document.getElementById('undo');
   if (undoFn) { u.hidden = false; toastFn = undoFn; }
   else { u.hidden = true; toastFn = null; }
+  /* 四象限页底部压着悬浮 + 和输入框，提示条得抬到它们上面，否则挡住的正是刚要打字的地方 */
+  el.classList.toggle('q', !!document.querySelector('.body.qmode'));
   el.classList.add('on');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(hideToast, undoFn ? 5200 : 2200);

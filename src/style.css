@@ -141,6 +141,8 @@ input{font:inherit;color:inherit;border:0;outline:0;background:none}
  box-shadow:0 10px 30px -12px rgba(0,0,0,.55);opacity:0;pointer-events:none;
  transition:opacity .18s,transform .18s;z-index:60;max-width:calc(100vw - 28px)}
 .toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast.q{bottom:82px}
+@media(max-width:860px){.toast.q{bottom:74px}}
 .toast .m{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .toast button{flex:none;color:#93d3ae;font-size:12.5px;font-weight:650;padding:3px 8px;border-radius:5px}
 .toast button:hover{background:rgba(255,255,255,.08)}

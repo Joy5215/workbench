@@ -131,6 +131,38 @@ function ok(name, cond, extra) {
     (await todos()).some((x) => x.t === '想到一件杂事' && x.u === 1 && x.i === 0));
   ok('收集箱条随之消失', await page.evaluate(() => !document.querySelector('.qbar')));
 
+  console.log('\n批量粘贴');
+
+  /* 合成 ClipboardEvent 能带 clipboardData，处理器是自己读的，所以这条测得出来。
+     注意：合成的 paste 不会触发浏览器默认粘贴，所以「单行不该被拦」要单独断言。 */
+  const pasteInto = async (sel, txt) => page.evaluate((s, t) => {
+    const el = document.querySelector(s);
+    if (!el) throw new Error('找不到 ' + s);
+    el.focus();
+    const dt = new DataTransfer();
+    dt.setData('text/plain', t);
+    const ev = new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true });
+    el.dispatchEvent(ev);
+    return ev.defaultPrevented;
+  }, sel, txt);
+
+  await click('[data-view="quad"]');
+  ok('切回四象限后悬浮按钮在', await page.evaluate(() => !!document.getElementById('fab')));
+  await click('#fab');
+  await click('[data-pick="deleg"]');
+
+  const blocked = await pasteInto('[data-qin="deleg"]', '- 订会议室\n[ ] 回电话\n1. 填报销');
+  await wait(400);
+  ok('多行粘贴被拦下默认行为', blocked === true);
+  const many = (await todos()).filter((x) => ['订会议室', '回电话', '填报销'].indexOf(x.t) >= 0);
+  ok('三行粘成三条', many.length === 3, many);
+  ok('三条都带「不重要但紧急」标记', many.every((x) => x.u === 1 && x.i === 0), many);
+  ok('列表前缀被吃掉', many.every((x) => !/^[-*\d\[]/.test(x.t)), many);
+  ok('粘贴后该格仍是可录入状态', await page.evaluate(() => !!document.querySelector('[data-qin="deleg"]')));
+
+  const one = await pasteInto('[data-qin="deleg"]', '只有一行');
+  ok('单行粘贴不被拦截（交给浏览器默认）', one === false);
+
   console.log('\n今日页仍然可用');
 
   await click('[data-view="today"]');

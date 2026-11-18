@@ -22,6 +22,71 @@ function submit(){
   render({focus:true, top:true});
 }
 
+/* ---------- 粘贴多行：每行一条 ----------
+   从飞书、备忘录、微信里复制一串待办，粘进来直接变成 N 条。
+   飞书的编辑器本身嵌不进来（X-Frame-Options: DENY + 第三方 cookie 限制），
+   但它的**产出**可以喂进来——这是「在别处写、在这里变成结构」唯一能真做到的形态。
+
+   顺手吃掉常见的前缀：`- ` `* ` `1. ` `[ ] ` `[x] `，留着它们当任务名很难看。 */
+function pasteLines(text, quadKey){
+  var lines = text.split(/\r?\n/).map(function(line){
+    return line
+      .replace(/^\s*[-*+•]\s+/, '')
+      .replace(/^\s*\d+[.)]\s+/, '')
+      .replace(/^\s*\[[ xX]?\]\s*/, '')
+      .trim();
+  }).filter(function(x){ return !!x; });
+
+  if (lines.length < 2) return 0;
+
+  var now = Date.now();
+  var q = quadKey ? QUAD_BY[quadKey] : null;
+  var n = 0;
+  lines.forEach(function(t){
+    var star = false;
+    if (/^[!！]/.test(t)) { star = true; t = t.replace(/^[!！]\s*/, ''); }
+    if (!t) return;
+    if (S.view === 'inbox' && !q) {
+      S.inbox.push({id:uid(), text:t, created:now, up:now, del:0});
+    } else {
+      S.todos.push({id:uid(), text:t, done:false, doneAt:0, star:star,
+                    urg:q ? q.urg : 0, imp:q ? q.imp : 0, created:now, up:now, del:0});
+    }
+    n++;
+  });
+  save();
+  return n;
+}
+
+/* 给一个输入框挂上「多行粘贴自动拆条」。quadKey 为空表示这是主输入框。 */
+function bindPaste(el, quadKey){
+  el.addEventListener('paste', function(e){
+    var cd = e.clipboardData;
+    if (!cd) return;
+
+    var files = cd.files;
+    if (files && files.length) {
+      var img = Array.prototype.filter.call(files, function(f){ return /^image\//.test(f.type); })[0];
+      if (img) { e.preventDefault(); toast('图片先存不了，只收文字'); return; }
+    }
+
+    var text = cd.getData('text/plain');
+    /* 单行交给浏览器默认行为，不要拦——拦了反而粘贴不了长句 */
+    if (!text || text.indexOf('\n') < 0) return;
+
+    var n = pasteLines(text, quadKey);
+    if (!n) return;
+    e.preventDefault();
+    render({top:true});
+    setTimeout(function(){
+      var again = quadKey ? document.querySelector('[data-qin="' + quadKey + '"]')
+                          : document.getElementById('inp');
+      if (again) { again.value = ''; again.focus(); }
+    }, 0);
+    toast('粘进来 ' + n + ' 条');
+  });
+}
+
 /* 象限内联添加：输入框在该格里，提交时直接带上这一格的 urg/imp。
    注意不能复用 submit()——那个靠 S.view 判断往 todos 还是 inbox 里塞，
    在四象限页会把事塞进收件箱。这里必须自己写。 */
